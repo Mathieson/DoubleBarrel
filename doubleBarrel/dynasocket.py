@@ -9,11 +9,19 @@ import socket
 
 class DynaSocket(socket.socket):
     '''
-    This is essentially the same as a regular socket, but
+    This is essentially the same as a regular socket, but it sends messages in
+    a dynamic manner. Receive length is no longer required and is calculated
+    dynamically by the send and recv functions.
     '''
     
     def send(self, message):
-        pass
+        '''
+        Sends the message's length, then sends the message.
+        '''
+        
+        
     
     def recv(self):
-        pass
+        '''
+        Receives the message length, 
+        '''
