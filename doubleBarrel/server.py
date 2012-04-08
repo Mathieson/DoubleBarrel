@@ -10,6 +10,7 @@ import select
 import threading
 import config
 import logging
+import dynasocket
 
 from shotgun_api3 import Shotgun
 from threading import Thread
@@ -59,9 +60,9 @@ class SGThread(Thread):
         if funcName and hasattr(self._sg, funcName):
             func = getattr(self._sg, funcName)
             results = func(*args, **kwargs)
-            self._socket.send(str(results))
+            dynasocket.send(self._socket, str(results))
         else:
-            self._socket.send("None")
+            dynasocket.send(self._socket, "None")
 
 
 class SGServer(object):
@@ -125,7 +126,7 @@ class SGServer(object):
                 else:
                     try:
                         # Otherwise, we are receiving a message from the client.
-                        msg = sock.recv(config.BUFFER_SIZE)
+                        msg = dynasocket.recv(sock)
                         if msg:
                             # If we have a message, it is a Shotgun transaction.
                             logger.info("Message received: %s" % msg)
@@ -162,8 +163,8 @@ class SGServer(object):
 
         newsock, (remhost, remport) = self._socket.accept() #@UnusedVariable
 
-        msg = newsock.recv(config.BUFFER_SIZE)
         # Get our authorization data.
+        msg = dynasocket.recv(newsock)
         authData = ast.literal_eval(msg)
         server = authData.get(config.AUTH_SERVER)
         script_name = authData.get(config.AUTH_SCRIPT)
@@ -175,9 +176,9 @@ class SGServer(object):
         and api_key == self._sg.config.api_key:
             self._clients.append(newsock)
             logger.info("Client connected -> Host: %s Port: %s" % (remhost, remport))
-            newsock.send(config.SUCCESS_MSG)
+            dynasocket.send(newsock, config.SUCCESS_MSG)
             return True
         else:
-            newsock.send(config.FAIL_MSG)
+            dynasocket.send(newsock, config.FAIL_MSG)
             newsock.close()
             return False
