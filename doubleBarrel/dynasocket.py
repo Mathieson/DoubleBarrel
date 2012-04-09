@@ -4,7 +4,12 @@ Created on 2012-04-07
 @author: Mat
 '''
 
-DEFAULT_RECV_LENGTH = 2048
+import config
+import ast
+
+
+MESSAGE_LENGTH_STRING = "msgLen="
+CONFIRM_MESSAGE = "Message length received."
 
 
 def send(sock, message):
@@ -12,12 +17,17 @@ def send(sock, message):
     Sends the message's length, then sends the message.
     '''
 
-    # Send the length of the message first, so the receiver knows how big it will be.
-    sock.send(str(len(message)))
-    # Wait for confirmation that the message has been received.
-    sock.recv(DEFAULT_RECV_LENGTH)
+    # Get the message's length.
+    msgLen = len(message)
+
+    if msgLen > config.BUFFER_SIZE:
+        # Send the message size.
+        sock.send(''.join([MESSAGE_LENGTH_STRING, str(msgLen)]))
+        # Wait for confirmation that the message was received.
+        sock.recv(len(CONFIRM_MESSAGE))
+
     # Send the actual message.
-    sock.send(str(message))
+    sock.send(message)
 
 
 def recv(sock):
@@ -25,9 +35,15 @@ def recv(sock):
     Receives the message length first, then receives the actual message.
     '''
 
-    # Receive the message using the default receive length.
-    messageLength = int(sock.recv(DEFAULT_RECV_LENGTH))
-    # Send back confirmation that the message was received.
-    sock.send(str(messageLength))
-    # Receive and return the actual message, using the proper length.
-    return sock.recv(messageLength)
+    # Receive the message.
+    msg = sock.recv(config.BUFFER_SIZE)
+    # If it is not a message length, return the message.
+    if not msg.startswith(MESSAGE_LENGTH_STRING):
+        return msg
+    else:
+        # Get the proper message length.
+        msgLen = ast.literal_eval(msg.split('=')[-1])
+        # Send confirmation back.
+        sock.send(CONFIRM_MESSAGE)
+        # Receive a new message
+        return sock.recv(msgLen)

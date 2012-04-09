@@ -13,10 +13,10 @@ import logging.handlers
 # Set our global variables
 # -----------------------------------------------------------------------------
 
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 1024
 
-SUCCESS_MSG = "Connection successful."
-FAIL_MSG = "Connection failed."
+CONNECT_SUCCESS_MSG = "Connection successful."
+CONNECT_FAIL_MSG = "Connection failed."
 
 AUTH_SERVER = 'server'
 AUTH_SCRIPT = 'script_name'

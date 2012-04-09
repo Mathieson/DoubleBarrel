@@ -62,9 +62,9 @@ class SGClient(object):
             dynasocket.send(self._socket, str(authData))
             # Get back a message as to whether or not we have succeeded.
             msg = dynasocket.recv(self._socket)
-            if msg == config.SUCCESS_MSG:
+            if msg == config.CONNECT_SUCCESS_MSG:
                 self._connected = True
-            elif msg == config.FAIL_MSG:
+            elif msg == config.CONNECT_FAIL_MSG:
                 self._connected = False
         except socket.error:
             logger.warning("Could not connect to server -> Host: %s Port: %s" % (self._host, self._port))
@@ -80,7 +80,7 @@ class SGClient(object):
             errorMsg = "client is not connected to a server"
             logger.error(errorMsg)
             raise ConnectionError(errorMsg)
-        
+
         # Assemble our function data and send through the socket.
         funcData = {config.FUNC_NAME:func.__name__,
                     config.ARGS:args,

@@ -162,13 +162,19 @@ class SGServer(object):
         '''
 
         newsock, (remhost, remport) = self._socket.accept() #@UnusedVariable
-
+        
+        # Create a variable to keep track of if we have failed the connection.
+        failed = False
+        
         # Get our authorization data.
         msg = dynasocket.recv(newsock)
-        authData = ast.literal_eval(msg)
-        server = authData.get(config.AUTH_SERVER)
-        script_name = authData.get(config.AUTH_SCRIPT)
-        api_key = authData.get(config.AUTH_KEY)
+        if msg:
+            authData = ast.literal_eval(msg)
+            server = authData.get(config.AUTH_SERVER)
+            script_name = authData.get(config.AUTH_SCRIPT)
+            api_key = authData.get(config.AUTH_KEY)
+        else:
+            failed = True
 
         # Check that our auth data matches our current Shotgun object.
         if server == self._sg.config.server \
@@ -176,9 +182,12 @@ class SGServer(object):
         and api_key == self._sg.config.api_key:
             self._clients.append(newsock)
             logger.info("Client connected -> Host: %s Port: %s" % (remhost, remport))
-            dynasocket.send(newsock, config.SUCCESS_MSG)
+            dynasocket.send(newsock, config.CONNECT_SUCCESS_MSG)
             return True
         else:
-            dynasocket.send(newsock, config.FAIL_MSG)
+            failed = True
+        
+        if failed:
+            dynasocket.send(newsock, config.CONNECT_FAIL_MSG)
             newsock.close()
             return False

@@ -14,21 +14,21 @@ def throughServer():
     sg = DoubleBarrel(config.SERVER_PATH, config.SCRIPT_NAME, config.SCRIPT_KEY,
                       host=socket.gethostname(), port=2626)
     results = sg.find('Shot', [])
-    #print results
+    print results
     return results
 
 
 def throughDirect():
     sg = DoubleBarrel(config.SERVER_PATH, config.SCRIPT_NAME, config.SCRIPT_KEY)
     results = sg.find('Shot', [])
-    #print results
+    print results
     return results
 
 
 if __name__ == '__main__':
     from timeit import Timer
 
-    loops = 100
+    loops = 1000
 
     t = Timer(throughServer)
     timeTotal = t.timeit(loops)
