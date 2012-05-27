@@ -4,6 +4,9 @@ Created on Mar 9, 2012
 @author: mat.facer
 '''
 
+#TODO: Implement some sort of maximum number of connections check. If we have reached the maximum number of connections, close the ones that have not been accessed in a long time.
+#TODO: Implement a switch for the log. Suspect writing everything to the console and file may slow things down a bit. Is it really necessary? Maybe default to file only and give an option to enable console.
+
 import ast
 import socket
 import select
