@@ -6,6 +6,7 @@ Created on Mar 15, 2012
 
 import os
 import sys
+import socket
 import logging.handlers
 
 
@@ -26,10 +27,33 @@ FUNC_NAME = 'funcName'
 ARGS = 'args'
 KWARGS = 'kwargs'
 
+LOGGER_MSG = '%-20s - Host: %-24s - Port: %-8s'
+
+SOCKET_TIMEOUT = 3
+
 
 # -----------------------------------------------------------------------------
 # Set up our loggers
 # -----------------------------------------------------------------------------
+def getLogMessage(header, sock, **kwargs):
+    '''
+    This will be our main function for generating a log message. Requires a message
+    header, a socket, and any additional log messages as keyword arguments.
+    '''
+
+    if type(sock) == socket.socket:
+        host, port = sock.getpeername()
+    elif type(sock) == tuple:
+        host, port = sock
+    else:
+        raise ValueError("sock must be a socket or tuple with host and port information")
+
+    host = socket.gethostbyaddr(host)[0]
+
+    kwargMessages = ['%-10s: %s' % item for item in kwargs.items()]
+    return ' - '.join([LOGGER_MSG] + kwargMessages) % (header, host, port)
+
+
 def _screenFormatter():
     return logging.Formatter("%(name)-8s - %(levelname)-12s - %(message)s")
 

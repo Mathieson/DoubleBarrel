@@ -8,7 +8,7 @@ import config #@UnusedImport
 import logging
 
 from shotgun_api3 import Shotgun
-from client import SGClient
+from client import DoubleBarrelClient
 
 
 logger = logging.getLogger('')
@@ -62,7 +62,7 @@ class DoubleBarrel(Shotgun):
         self._sgclient = None
         # Attempt to open a socket at the host and port.
         if host and port and connect:
-            sgclient = SGClient(self, host, port)
+            sgclient = DoubleBarrelClient(self, host, port)
             if sgclient.connect():
                 self._sgclient = sgclient
 

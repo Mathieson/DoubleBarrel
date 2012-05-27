@@ -14,12 +14,13 @@ from shotgun_api3 import Shotgun
 
 
 logger = logging.getLogger('')
+socket.setdefaulttimeout(config.SOCKET_TIMEOUT)
 
 
 class ConnectionError(IOError):pass
 
 
-class SGClient(object):
+class DoubleBarrelClient(object):
     '''
     Attempts to connect to an existing socket using the host and port information.
     It will pass commands through the socket, if the connection is successful. A
@@ -30,14 +31,20 @@ class SGClient(object):
     def __init__(self, sg, host, port):
 
         if not isinstance(sg, Shotgun):
-            raise ValueError("sg must be a Shotgun object")
+            logMsg = "sg must be a Shotgun object"
+            logger.critical(logMsg)
+            raise ValueError(logMsg)
 
         if not isinstance(host, str):
-            raise ValueError("host must be a string")
+            logMsg = "host must be a string"
+            logger.critical(logMsg)
+            raise ValueError(logMsg)
 
         portThresh = 2000
         if not isinstance(port, int) or port < portThresh:
-            raise ValueError("port must be an integer larger than %i" % portThresh)
+            logMsg = "port must be an integer larger than %i" % portThresh
+            logger.critical(logMsg)
+            raise ValueError(logMsg)
 
         self._sg = sg
         self._host = host
@@ -67,7 +74,8 @@ class SGClient(object):
             elif msg == config.CONNECT_FAIL_MSG:
                 self._connected = False
         except socket.error:
-            logger.warning("Could not connect to server -> Host: %s Port: %s" % (self._host, self._port))
+            logMsg = config.getLogMessage("Could not connect to server", (self._host, self._port))
+            logger.warning(logMsg)
 
         return self._connected
 
@@ -77,9 +85,9 @@ class SGClient(object):
         '''
 
         if not self._connected:
-            errorMsg = "client is not connected to a server"
-            logger.error(errorMsg)
-            raise ConnectionError(errorMsg)
+            logMsg = "client is not connected to a server"
+            logger.critical(logMsg)
+            raise ConnectionError(logMsg)
 
         # Assemble our function data and send through the socket.
         funcData = {config.FUNC_NAME:func.__name__,

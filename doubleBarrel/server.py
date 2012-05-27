@@ -18,9 +18,22 @@ from copy import copy
 
 
 logger = logging.getLogger('server')
+socket.setdefaulttimeout(config.SOCKET_TIMEOUT)
 
 
-class SGThread(Thread):
+def _funcToString(funcName, *args, **kwargs):
+    '''
+    Provided a function name, arguments, and keyword arguments, this will output
+    a string that looks like this function call. This is intended for logging
+    purposes only.
+    '''
+
+    allArgs = str(args)[1:-1].replace(' ', '').split(',')
+    allArgs.extend(['%s=%s' % item for item in kwargs])
+    return '%s(%s)' % (funcName, ', '.join(allArgs))
+
+
+class DoubleBarrelThread(Thread):
     '''
     Allows threaded Shotgun interaction. We are having a queue of transaction
     requests come into the server. It is not efficient to have the queue wait
@@ -56,16 +69,23 @@ class SGThread(Thread):
         args = self._funcData.get(config.ARGS)
         kwargs = self._funcData.get(config.KWARGS)
 
+        results = None
         # Ensure we have a function name and it exists on the Shotgun object.
         if funcName and hasattr(self._sg, funcName):
+            queryString = _funcToString(funcName, *args, **kwargs)
+            logMsg = config.getLogMessage("Querying Shotgun", self._socket, Query=queryString)
+            logger.info(logMsg)
+
             func = getattr(self._sg, funcName)
             results = func(*args, **kwargs)
-            dynasocket.send(self._socket, str(results))
-        else:
-            dynasocket.send(self._socket, "None")
+
+        logMsg = config.getLogMessage("Sending results", self._socket, Results=results)
+        logger.info(logMsg)
+
+        dynasocket.send(self._socket, str(results))
 
 
-class SGServer(object):
+class DoubleBarrelServer(object):
     '''
     Opens a socket using the host and port provided. Intended to be used as a
     daemon process. Requires a Shotgun object as well.
@@ -74,14 +94,20 @@ class SGServer(object):
     def __init__(self, sg, host, port):
 
         if not isinstance(sg, Shotgun):
-            raise ValueError("sg must be a Shotgun object")
+            logMsg = "sg must be a Shotgun object"
+            logger.critical(logMsg)
+            raise ValueError(logMsg)
 
         if not isinstance(host, str):
-            raise ValueError("host must be a string")
+            logMsg = "host must be a string"
+            logger.critical(logMsg)
+            raise ValueError(logMsg)
 
         portThresh = 2000
         if not isinstance(port, int) or port < portThresh:
-            raise ValueError("port must be an integer larger than %i" % portThresh)
+            logMsg = "port must be an integer larger than %i" % portThresh
+            logger.critical(logMsg)
+            raise ValueError(logMsg)
 
         self._sg = sg
         self._host = host
@@ -112,7 +138,8 @@ class SGServer(object):
         disconnecting, or a Shotgun transaction request coming in from a client.
         '''
 
-        logger.info("Shotgun Server started -> Host: %s Port: %s" % (self._host, self._port))
+        logMsg = config.getLogMessage("DoubleBarrel server started", (self._host, self._port))
+        logger.info(logMsg)
 
         while 1:
             # Get all of our sockets that have communications occurring.
@@ -129,13 +156,14 @@ class SGServer(object):
                         msg = dynasocket.recv(sock)
                         if msg:
                             # If we have a message, it is a Shotgun transaction.
-                            logger.info("Message received: %s" % msg)
+                            logMsg = config.getLogMessage("Message received", sock, Message=msg)
+                            logger.info(logMsg)
                             # Convert our message into a dictionary we can use.
                             funcData = ast.literal_eval(msg)
                             while 1:
                                 # Loop until we have a free thread available.
                                 if threading.activeCount() < self._maxThreads:
-                                    SGThread(self._sg, funcData, sock).start()
+                                    DoubleBarrelThread(self._sg, funcData, sock).start()
                                     break
                         else:
                             # If there is no message, our client has disconnected.
@@ -149,8 +177,8 @@ class SGServer(object):
         removing it from the list of active clients.
         '''
 
-        remhost, remport = client.getpeername()
-        logger.info("Client disconnected -> Host: %s Port: %s" % (remhost, remport))
+        logMsg = config.getLogMessage("Client disconnected", client)
+        logger.info(logMsg)
         client.close()
         self._clients.remove(client)
 
@@ -161,11 +189,11 @@ class SGServer(object):
         we start receiving messages from it.
         '''
 
-        newsock, (remhost, remport) = self._socket.accept() #@UnusedVariable
-        
+        newsock, (host, port) = self._socket.accept() #@UnusedVariable
+
         # Create a variable to keep track of if we have failed the connection.
         failed = False
-        
+
         # Get our authorization data.
         msg = dynasocket.recv(newsock)
         if msg:
@@ -181,12 +209,12 @@ class SGServer(object):
         and script_name == self._sg.config.script_name \
         and api_key == self._sg.config.api_key:
             self._clients.append(newsock)
-            logger.info("Client connected -> Host: %s Port: %s" % (remhost, remport))
+            logger.info(config.getLogMessage("Client Connected", newsock))
             dynasocket.send(newsock, config.CONNECT_SUCCESS_MSG)
             return True
         else:
             failed = True
-        
+
         if failed:
             dynasocket.send(newsock, config.CONNECT_FAIL_MSG)
             newsock.close()
