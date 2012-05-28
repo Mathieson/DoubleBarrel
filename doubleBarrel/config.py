@@ -62,6 +62,24 @@ def _fileFormatter():
     return logging.Formatter("%(asctime)-6s - %(name)-10s - %(levelname)-12s - %(message)s")
 
 
+def _createDir(path):
+    '''
+    This creates the directories for where our logs will exist.
+    '''
+
+    # If the current directory already exists, our work is done.
+    if os.path.exists(path):
+        return path
+
+    # If the parent directory does not exist, we must create it.
+    parentDir = os.path.dirname(path)
+    if not os.path.exists(parentDir):
+        os.mkdir(parentDir)
+
+    # Now that the parent directory exists, we can make our current directory.
+    os.mkdir(path)
+
+
 def _configureRootLogger():
     '''
     This sets up the configuration for our root logger. It should log to the
@@ -73,7 +91,8 @@ def _configureRootLogger():
     logger.setLevel(logging.NOTSET)
 
     # Create a file handler that will record all of our errors.
-    errorFile = os.path.join(os.path.dirname(__file__), "logs/errors.log")
+    errorFile = os.path.join(os.path.dirname(__file__), "logs", "errors.log")
+    _createDir(os.path.dirname(errorFile))
     fileHandler = logging.FileHandler(errorFile)
     fileHandler.setLevel(logging.WARNING)
 
@@ -110,7 +129,8 @@ def _configureServerLogger():
 
     # Create a file handler that will track everything.
     serverFile = os.path.join(os.path.dirname(__file__),
-                              "logs/server/%s.log" % moduleName)
+                              "logs", "server", "%s.log" % moduleName)
+    _createDir(os.path.dirname(serverFile))
     fileHandler = logging.handlers.RotatingFileHandler(serverFile)
     fileHandler.setLevel(logging.INFO)
 
