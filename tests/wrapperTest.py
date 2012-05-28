@@ -7,20 +7,20 @@ Created on Mar 21, 2012
 import socket
 import config
 
-from doubleBarrel.wrapper import DoubleBarrel
+from doubleBarrel import DoubleBarrel
 
 
 def viaServer():
     sg = DoubleBarrel(config.SERVER_PATH, config.SCRIPT_NAME, config.SCRIPT_KEY,
                       host=socket.gethostname(), port=2626)
-    results = sg.find('Shot', [])
+    results = sg.find('Project', [])
     print results
     return results
 
 
 def viaDirect():
     sg = DoubleBarrel(config.SERVER_PATH, config.SCRIPT_NAME, config.SCRIPT_KEY)
-    results = sg.find('Shot', [])
+    results = sg.find('Project', [])
     print results
     return results
 
