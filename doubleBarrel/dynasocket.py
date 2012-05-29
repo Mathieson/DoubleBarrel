@@ -38,7 +38,6 @@ def send(sock, message):
         logger.error(logMsg)
 
 
-
 def recv(sock):
     '''
     Receives the message length first, then receives the actual message.
