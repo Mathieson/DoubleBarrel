@@ -94,12 +94,18 @@ class DoubleBarrelServer(object):
     daemon process. Requires a Shotgun object as well.
     '''
 
-    def __init__(self, sg, host, port):
+    def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
+        http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
 
-        if not isinstance(sg, Shotgun):
-            logMsg = "sg must be a Shotgun object"
-            logger.critical(logMsg)
-            raise ValueError(logMsg)
+        # Create the Shotgun object that will be used throughout the server.
+        sg = Shotgun(base_url, script_name, api_key, convert_datetimes_to_utc,
+                     http_proxy, ensure_ascii, connect)
+
+        if not host:
+            host = socket.gethostname()
+
+        if not port:
+            port = config.appKeyToPort(sg.config.api_key)
 
         if not isinstance(host, str):
             logMsg = "host must be a string"

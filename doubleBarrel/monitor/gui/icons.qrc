@@ -1,0 +1,13 @@
+<RCC>
+  <qresource>
+    <file>icons/compedShotgun.png</file>
+    <file>icons/advanced.png</file>
+    <file>icons/star.png</file>
+    <file>icons/refresh.png</file>
+    <file>icons/monitor.png</file>
+    <file>icons/server.png</file>
+    <file>icons/minus.png</file>
+    <file>icons/plus.png</file>
+    <file>icons/shotgun.png</file>
+  </qresource>
+</RCC>

@@ -13,7 +13,6 @@ import logging.handlers
 # -----------------------------------------------------------------------------
 # Set our global variables
 # -----------------------------------------------------------------------------
-
 BUFFER_SIZE = 1024
 
 CONNECT_SUCCESS_MSG = "Connection successful."
@@ -30,6 +29,25 @@ KWARGS = 'kwargs'
 LOGGER_MSG = '%-20s - Host: %-24s - Port: %-8s'
 
 SOCKET_TIMEOUT = 3
+
+
+# -----------------------------------------------------------------------------
+# Common functions shared between the server and client modules.
+# -----------------------------------------------------------------------------
+def appKeyToPort(appKey):
+    '''
+    Translates the application key to a port number.
+    '''
+
+    minPort = 10000
+    maxPort = 65535
+
+    appKeyNum = str(int(appKey, 16))
+
+    for index, value in enumerate(appKeyNum): #@UnusedVariable
+        possiblePort = int(appKeyNum[index:index + 5])
+        if minPort < possiblePort < maxPort:
+            return possiblePort
 
 
 # -----------------------------------------------------------------------------

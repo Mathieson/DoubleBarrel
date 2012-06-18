@@ -4,6 +4,7 @@ Created on Mar 12, 2012
 @author: mat.facer
 '''
 
+import socket
 import config #@UnusedImport
 import logging
 
@@ -48,10 +49,10 @@ class DoubleBarrel(Shotgun):
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
         '''
         We will initialize the Shotgun object, but will not connect right away.
-        Instead, if we have a host and port specified, we will attempt to create
-        a socket connection using that data and the Shotgun object. If we do not
-        have a host and port specified, or do not find a connection, we will fall
-        back and connect to the actual Shotgun server instead.
+        Instead it will will attempt to create a socket connection using the
+        Shotgun object and the host and port data provided or generated. If we do
+        not have a host and port specified, or do not find a connection, we will
+        fall back and connect to the actual Shotgun server instead.
         '''
 
         Shotgun.__init__(self, base_url, script_name, api_key,
@@ -59,15 +60,40 @@ class DoubleBarrel(Shotgun):
             http_proxy=http_proxy, ensure_ascii=ensure_ascii,
             connect=False)
 
-        self._sgclient = None
-        # Attempt to open a socket at the host and port.
-        if host and port and connect:
-            sgclient = DoubleBarrelClient(self, host, port)
-            if sgclient.connect():
-                self._sgclient = sgclient
+        # If a host is not specified, attempt using the local machine.
+        if not host:
+            host = socket.gethostname()
 
-        if connect and not self._sgclient:
+        # If a port is not specified, generate a port from the app key.
+        if not port:
+            port = config.appKeyToPort(self.config.api_key)
+
+        self._sgclient = None
+        self._host = host
+        self._port = port
+
+        if connect:
             self.connect()
+
+    def host(self):
+        return self._host
+
+    def port(self):
+        return self._port
+
+    def connect(self):
+        '''
+        Attempts to connect to a Double Barrel Server first, then connects
+        directly to Shotgun if failed.
+        '''
+
+        # Attempt to open a socket at the host and port.
+        sgclient = DoubleBarrelClient(self, self.host(), self.port())
+        if sgclient.connect():
+            self._sgclient = sgclient
+
+        if not self._sgclient:
+            Shotgun.connect(self)
 
     @shotgunInteraction
     def find(self, entity_type, filters, fields=None, order=None,
