@@ -1,1 +1,1 @@
-pyrcc4 C:\Users\Mat\workspace\doubleBarrel\doubleBarrel\gui\icons.qrc -o C:\Users\Mat\workspace\doubleBarrel\doubleBarrel\gui\icons_rc.py
+pyrcc4 %~dp0icons.qrc -o %~dp0icons_rc.py

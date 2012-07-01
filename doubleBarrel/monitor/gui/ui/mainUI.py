@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\Mat\workspace\doubleBarrel\doubleBarrel\monitor\gui\ui\mainUI.ui'
 #
-# Created: Sun Jun 17 14:12:05 2012
+# Created: Sat Jun 30 21:52:33 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,7 +32,7 @@ class Ui_mainUi(object):
         self.serverTree = QtGui.QTreeWidget(self.logSplitter)
         self.serverTree.setAnimated(True)
         self.serverTree.setObjectName(_fromUtf8("serverTree"))
-        self.serverTree.headerItem().setText(0, QtGui.QApplication.translate("mainUi", "Scripts", None, QtGui.QApplication.UnicodeUTF8))
+        self.serverTree.headerItem().setText(0, QtGui.QApplication.translate("mainUi", "Script Name", None, QtGui.QApplication.UnicodeUTF8))
         self.serverTree.header().setVisible(False)
         self.logOutput = QtGui.QTextBrowser(self.logSplitter)
         self.logOutput.setObjectName(_fromUtf8("logOutput"))
@@ -81,15 +81,12 @@ class Ui_mainUi(object):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 893, 27))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuManage = QtGui.QMenu(self.menubar)
-        self.menuManage.setTearOffEnabled(True)
         self.menuManage.setTitle(QtGui.QApplication.translate("mainUi", "Manage", None, QtGui.QApplication.UnicodeUTF8))
         self.menuManage.setObjectName(_fromUtf8("menuManage"))
         self.menuLog = QtGui.QMenu(self.menubar)
-        self.menuLog.setTearOffEnabled(True)
         self.menuLog.setTitle(QtGui.QApplication.translate("mainUi", "Log", None, QtGui.QApplication.UnicodeUTF8))
         self.menuLog.setObjectName(_fromUtf8("menuLog"))
         self.menuPreferences = QtGui.QMenu(self.menubar)
-        self.menuPreferences.setTearOffEnabled(True)
         self.menuPreferences.setTitle(QtGui.QApplication.translate("mainUi", "Display", None, QtGui.QApplication.UnicodeUTF8))
         self.menuPreferences.setObjectName(_fromUtf8("menuPreferences"))
         mainUi.setMenuBar(self.menubar)
@@ -122,12 +119,12 @@ class Ui_mainUi(object):
         self.actionUnlock = QtGui.QAction(mainUi)
         self.actionUnlock.setText(QtGui.QApplication.translate("mainUi", "Unlock", None, QtGui.QApplication.UnicodeUTF8))
         self.actionUnlock.setObjectName(_fromUtf8("actionUnlock"))
-        self.actionRestart_Server = QtGui.QAction(mainUi)
+        self.restartServerAction = QtGui.QAction(mainUi)
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/refresh.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.actionRestart_Server.setIcon(icon3)
-        self.actionRestart_Server.setText(QtGui.QApplication.translate("mainUi", "Restart Server", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRestart_Server.setObjectName(_fromUtf8("actionRestart_Server"))
+        self.restartServerAction.setIcon(icon3)
+        self.restartServerAction.setText(QtGui.QApplication.translate("mainUi", "Restart Server", None, QtGui.QApplication.UnicodeUTF8))
+        self.restartServerAction.setObjectName(_fromUtf8("restartServerAction"))
         self.simpleModeAction = QtGui.QAction(mainUi)
         self.simpleModeAction.setCheckable(True)
         self.simpleModeAction.setChecked(True)
@@ -143,10 +140,16 @@ class Ui_mainUi(object):
         self.advancedModeAction.setIcon(icon5)
         self.advancedModeAction.setText(QtGui.QApplication.translate("mainUi", "Advanced", None, QtGui.QApplication.UnicodeUTF8))
         self.advancedModeAction.setObjectName(_fromUtf8("advancedModeAction"))
+        self.setServerFileAction = QtGui.QAction(mainUi)
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/server.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setServerFileAction.setIcon(icon6)
+        self.setServerFileAction.setText(QtGui.QApplication.translate("mainUi", "Set Server File", None, QtGui.QApplication.UnicodeUTF8))
+        self.setServerFileAction.setObjectName(_fromUtf8("setServerFileAction"))
         self.menuManage.addAction(self.addServerAction)
         self.menuManage.addAction(self.removeServerAction)
         self.menuManage.addSeparator()
-        self.menuManage.addAction(self.actionRestart_Server)
+        self.menuManage.addAction(self.restartServerAction)
         self.menuLog.addAction(self.showLogAction)
         self.menuLog.addAction(self.hideLogAction)
         self.menuLog.addSeparator()
@@ -164,4 +167,6 @@ class Ui_mainUi(object):
     def retranslateUi(self, mainUi):
         self.serverTree.setSortingEnabled(True)
 
+import icons_rc
+import icons_rc
 import icons_rc

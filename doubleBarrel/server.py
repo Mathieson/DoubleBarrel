@@ -11,17 +11,16 @@ import ast
 import socket
 import select
 import threading
-import config
+import common
 import logging
 import dynasocket
-
 from shotgun_api3 import Shotgun
 from threading import Thread
 from copy import copy
 
 
 logger = logging.getLogger('server')
-socket.setdefaulttimeout(config.SOCKET_TIMEOUT)
+socket.setdefaulttimeout(common.SOCKET_TIMEOUT)
 
 
 def _funcToString(funcName, *args, **kwargs):
@@ -68,21 +67,21 @@ class DoubleBarrelThread(Thread):
         '''
 
         # Get our function data from the funcdata dict.
-        funcName = self._funcData.get(config.FUNC_NAME)
-        args = self._funcData.get(config.ARGS)
-        kwargs = self._funcData.get(config.KWARGS)
+        funcName = self._funcData.get(common.FUNC_NAME)
+        args = self._funcData.get(common.ARGS)
+        kwargs = self._funcData.get(common.KWARGS)
 
         results = None
         # Ensure we have a function name and it exists on the Shotgun object.
         if funcName and hasattr(self._sg, funcName):
             queryString = _funcToString(funcName, *args, **kwargs)
-            logMsg = config.getLogMessage("Querying Shotgun", self._socket, Query=queryString)
+            logMsg = common.getLogMessage("Querying Shotgun", self._socket, Query=queryString)
             logger.info(logMsg)
 
             func = getattr(self._sg, funcName)
             results = func(*args, **kwargs)
 
-        logMsg = config.getLogMessage("Sending results", self._socket, Results=results)
+        logMsg = common.getLogMessage("Sending results", self._socket, Results=results)
         logger.info(logMsg)
 
         dynasocket.send(self._socket, str(results))
@@ -94,6 +93,7 @@ class DoubleBarrelServer(object):
     daemon process. Requires a Shotgun object as well.
     '''
 
+    @common.createUsingShotgunAuthFile
     def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
 
@@ -105,7 +105,7 @@ class DoubleBarrelServer(object):
             host = socket.gethostname()
 
         if not port:
-            port = config.appKeyToPort(sg.config.api_key)
+            port = common.appKeyToPort(sg.config.api_key)
 
         if not isinstance(host, str):
             logMsg = "host must be a string"
@@ -140,6 +140,14 @@ class DoubleBarrelServer(object):
 
         self._maxThreads = maxthreads
 
+    def stop(self):
+        '''
+        Stops the server by setting the _isRunning variable to false. This will
+        kill the infinite looping of the server.
+        '''
+
+        self._isRunning = False
+
     def start(self):
         '''
         Starts the server watching for messages. This will receive messages and
@@ -147,10 +155,12 @@ class DoubleBarrelServer(object):
         disconnecting, or a Shotgun transaction request coming in from a client.
         '''
 
-        logMsg = config.getLogMessage("DoubleBarrel server started", (self._host, self._port))
+        self._isRunning = True
+
+        logMsg = common.getLogMessage("DoubleBarrel server started", (self._host, self._port))
         logger.info(logMsg)
 
-        while 1:
+        while self._isRunning:
             # Get all of our sockets that have communications occurring.
             sread, swrite, sexc = select.select(self._clients, [], []) #@UnusedVariable
 
@@ -165,7 +175,7 @@ class DoubleBarrelServer(object):
                         msg = dynasocket.recv(sock)
                         if msg:
                             # If we have a message, it is a Shotgun transaction.
-                            logMsg = config.getLogMessage("Message received", sock, Message=msg)
+                            logMsg = common.getLogMessage("Message received", sock, Message=msg)
                             logger.info(logMsg)
                             # Convert our message into a dictionary we can use.
                             funcData = ast.literal_eval(msg)
@@ -186,7 +196,7 @@ class DoubleBarrelServer(object):
         removing it from the list of active clients.
         '''
 
-        logMsg = config.getLogMessage("Client disconnected", client)
+        logMsg = common.getLogMessage("Client disconnected", client)
         logger.info(logMsg)
         client.close()
         self._clients.remove(client)
@@ -207,9 +217,9 @@ class DoubleBarrelServer(object):
         msg = dynasocket.recv(newsock)
         if msg:
             authData = ast.literal_eval(msg)
-            server = authData.get(config.AUTH_SERVER)
-            script_name = authData.get(config.AUTH_SCRIPT)
-            api_key = authData.get(config.AUTH_KEY)
+            server = authData.get(common.AUTH_SERVER)
+            script_name = authData.get(common.AUTH_SCRIPT)
+            api_key = authData.get(common.AUTH_KEY)
         else:
             failed = True
 
@@ -218,13 +228,13 @@ class DoubleBarrelServer(object):
         and script_name == self._sg.config.script_name \
         and api_key == self._sg.config.api_key:
             self._clients.append(newsock)
-            logger.info(config.getLogMessage("Client Connected", newsock))
-            dynasocket.send(newsock, config.CONNECT_SUCCESS_MSG)
+            logger.info(common.getLogMessage("Client Connected", newsock))
+            dynasocket.send(newsock, common.CONNECT_SUCCESS_MSG)
             return True
         else:
             failed = True
 
         if failed:
-            dynasocket.send(newsock, config.CONNECT_FAIL_MSG)
+            dynasocket.send(newsock, common.CONNECT_FAIL_MSG)
             newsock.close()
             return False

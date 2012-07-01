@@ -4,7 +4,7 @@ Created on 2012-04-07
 @author: Mat
 '''
 
-import config
+import common
 import ast
 import logging
 
@@ -25,7 +25,7 @@ def send(sock, message):
         # Get the message's length.
         msgLen = len(message)
 
-        if msgLen > config.BUFFER_SIZE:
+        if msgLen > common.BUFFER_SIZE:
             # Send the message size.
             sock.send(''.join([MESSAGE_LENGTH_STRING, str(msgLen)]))
             # Wait for confirmation that the message was received.
@@ -34,7 +34,7 @@ def send(sock, message):
         # Send the actual message.
         sock.send(message)
     except:
-        logMsg = config.getLogMessage("Client no longer connected", sock)
+        logMsg = common.getLogMessage("Client no longer connected", sock)
         logger.error(logMsg)
 
 
@@ -44,7 +44,7 @@ def recv(sock):
     '''
 
     # Receive the message.
-    msg = sock.recv(config.BUFFER_SIZE)
+    msg = sock.recv(common.BUFFER_SIZE)
     # If it is not a message length, return the message.
     if not msg.startswith(MESSAGE_LENGTH_STRING):
         return msg

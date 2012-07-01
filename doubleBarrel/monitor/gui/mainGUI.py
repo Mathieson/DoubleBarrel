@@ -8,13 +8,18 @@ import sys
 from ui import mainUI
 from PyQt4 import QtGui, QtCore
 from functools import partial
+from monitor.manager import ServerManager
 
 
 class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
 
-    def __init__(self):
+    def __init__(self, manager=None):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
+
+        self._manager = manager or ServerManager()
+        self._servers = {}
+
         self._extraUiSetup()
         self._setupCallbacks()
         self._setDefaults()
@@ -97,7 +102,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
 
         self.showLogLabel.setEnabled(logState)
 
-    @QtCore.pyqtSlot(int)
     def _setLogVis(self, state):
         '''
         Sets the visibility of the log display area.
@@ -112,6 +116,25 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
 
         return self.logSplitter.sizes()[-1]
+
+    def _addServerToTree(self, server):
+        '''
+        Adds a server to the tree view.
+        '''
+
+        pass
+
+    def addServerBtnPressed(self):
+        '''
+        Triggered when one of the add server buttons is pressed.
+        '''
+        pass
+
+    def removeServerBtnPressed(self):
+        '''
+        Triggered when one of the remove server buttons is pressed.
+        '''
+        pass
 
 
 if __name__ == '__main__':

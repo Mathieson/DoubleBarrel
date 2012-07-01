@@ -15,7 +15,6 @@ Created on 2012-06-14
 For now, the demo at the bottom shows how to use it...'''
 
 import os
-import sys
 import win32api #@UnresolvedImport
 import win32con #@UnresolvedImport
 import win32gui_struct #@UnresolvedImport
@@ -227,8 +226,8 @@ def non_string_iterable(obj):
 # directory in order for this to work...
 if __name__ == '__main__':
     import itertools, glob
-    
-    os.chdir(r'C:\Users\Mat\icons\ico')
+
+    os.chdir(r'C:\Users\Mat\workspace\doubleBarrel\doubleBarrel\monitor\gui\icons')
 
     icons = itertools.cycle(glob.glob('*.ico'))
     hover_text = "SysTrayIcon.py Demo"

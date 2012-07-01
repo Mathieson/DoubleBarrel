@@ -6,7 +6,7 @@ Created on Mar 9, 2012
 
 import ast
 import socket
-import config
+import common
 import logging
 import dynasocket
 
@@ -14,7 +14,7 @@ from shotgun_api3 import Shotgun
 
 
 logger = logging.getLogger('')
-socket.setdefaulttimeout(config.SOCKET_TIMEOUT)
+socket.setdefaulttimeout(common.SOCKET_TIMEOUT)
 
 
 class ConnectionError(IOError):pass
@@ -63,18 +63,18 @@ class DoubleBarrelClient(object):
             self._socket = socket.socket()
             self._socket.connect((self._host, self._port))
             # Package our Shotgun auth data to then send to the server.
-            authData = {config.AUTH_SERVER:self._sg.config.server,
-                        config.AUTH_SCRIPT:self._sg.config.script_name,
-                        config.AUTH_KEY:self._sg.config.api_key}
+            authData = {common.AUTH_SERVER:self._sg.config.server,
+                        common.AUTH_SCRIPT:self._sg.config.script_name,
+                        common.AUTH_KEY:self._sg.config.api_key}
             dynasocket.send(self._socket, str(authData))
             # Get back a message as to whether or not we have succeeded.
             msg = dynasocket.recv(self._socket)
-            if msg == config.CONNECT_SUCCESS_MSG:
+            if msg == common.CONNECT_SUCCESS_MSG:
                 self._connected = True
-            elif msg == config.CONNECT_FAIL_MSG:
+            elif msg == common.CONNECT_FAIL_MSG:
                 self._connected = False
         except socket.error:
-            logMsg = config.getLogMessage("Could not connect to server", (self._host, self._port))
+            logMsg = common.getLogMessage("Could not connect to server", (self._host, self._port))
             logger.warning(logMsg)
 
         return self._connected
@@ -90,9 +90,9 @@ class DoubleBarrelClient(object):
             raise ConnectionError(logMsg)
 
         # Assemble our function data and send through the socket.
-        funcData = {config.FUNC_NAME:func.__name__,
-                    config.ARGS:args,
-                    config.KWARGS:kwargs}
+        funcData = {common.FUNC_NAME:func.__name__,
+                    common.ARGS:args,
+                    common.KWARGS:kwargs}
         dynasocket.send(self._socket, str(funcData))
         # Receive back the results that the server got from Shotgun
         msg = dynasocket.recv(self._socket)

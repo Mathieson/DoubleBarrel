@@ -4,7 +4,8 @@ Created on Mar 21, 2012
 @author: mat.facer
 '''
 
-import config
+import os
+from ConfigParser import ConfigParser
 from doubleBarrel import DoubleBarrel
 from shotgun_api3 import Shotgun
 from timeit import Timer
@@ -28,7 +29,15 @@ class DoubleBarrelTest(object):
         when the test class was created.
         '''
 
-        return self.testClass()(config.SERVER_PATH, config.SCRIPT_NAME, config.SCRIPT_KEY)
+        config = ConfigParser()
+        dirPath = os.path.dirname(__file__)
+        sgFile = os.path.join(dirPath, 'doubleBarrel.sg')
+        config.read(sgFile)
+        shotgunData = dict(config.items('ShotgunData'))
+        serverPath = shotgunData.get('base_url')
+        scriptName = shotgunData.get('script_name')
+        scriptKey = shotgunData.get('api_key')
+        return self.testClass()(serverPath, scriptName, scriptKey)
 
     def _queryShotgun(self, shotgunObject):
         '''
@@ -116,7 +125,7 @@ class DoubleBarrelTest(object):
         print "\tTotal time: %s" % self.totalTime()
         print "\tMean time: %s" % self.meanTime()
         print "\tMedian time: %s" % self.medianTime()
-        print "\tMode time: %s" % self.modeTime()
+        print "\tMode time(s): %s" % self.modeTime()
         print "\tFastest time: %s" % self.fastestTime()
         print "\tSlowest time: %s" % self.slowestTime()
         print "\tTime hits: %s" % self.timeHits()

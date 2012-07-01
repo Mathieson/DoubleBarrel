@@ -5,7 +5,7 @@ Created on Mar 12, 2012
 '''
 
 import socket
-import config #@UnusedImport
+import common
 import logging
 
 from shotgun_api3 import Shotgun
@@ -45,6 +45,7 @@ class DoubleBarrel(Shotgun):
     database transactions through that channel instead.
     '''
 
+    @common.createUsingShotgunAuthFile
     def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
         '''
@@ -66,7 +67,7 @@ class DoubleBarrel(Shotgun):
 
         # If a port is not specified, generate a port from the app key.
         if not port:
-            port = config.appKeyToPort(self.config.api_key)
+            port = common.appKeyToPort(self.config.api_key)
 
         self._sgclient = None
         self._host = host

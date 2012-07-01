@@ -34,12 +34,9 @@
        <attribute name="headerVisible">
         <bool>false</bool>
        </attribute>
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
        <column>
         <property name="text">
-         <string>Scripts</string>
+         <string>Script Name</string>
         </property>
        </column>
       </widget>
@@ -158,21 +155,15 @@
     </rect>
    </property>
    <widget class="QMenu" name="menuManage">
-    <property name="tearOffEnabled">
-     <bool>true</bool>
-    </property>
     <property name="title">
      <string>Manage</string>
     </property>
     <addaction name="addServerAction"/>
     <addaction name="removeServerAction"/>
     <addaction name="separator"/>
-    <addaction name="actionRestart_Server"/>
+    <addaction name="restartServerAction"/>
    </widget>
    <widget class="QMenu" name="menuLog">
-    <property name="tearOffEnabled">
-     <bool>true</bool>
-    </property>
     <property name="title">
      <string>Log</string>
     </property>
@@ -183,9 +174,6 @@
     <addaction name="horizontalSplitAction"/>
    </widget>
    <widget class="QMenu" name="menuPreferences">
-    <property name="tearOffEnabled">
-     <bool>true</bool>
-    </property>
     <property name="title">
      <string>Display</string>
     </property>
@@ -257,7 +245,7 @@
     <string>Unlock</string>
    </property>
   </action>
-  <action name="actionRestart_Server">
+  <action name="restartServerAction">
    <property name="icon">
     <iconset resource="../icons.qrc">
      <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
@@ -293,8 +281,19 @@
     <string>Advanced</string>
    </property>
   </action>
+  <action name="setServerFileAction">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/icons/server.png</normaloff>:/icons/server.png</iconset>
+   </property>
+   <property name="text">
+    <string>Set Server File</string>
+   </property>
+  </action>
  </widget>
  <resources>
+  <include location="../icons.qrc"/>
+  <include location="../icons.qrc"/>
   <include location="../icons.qrc"/>
  </resources>
  <connections/>
