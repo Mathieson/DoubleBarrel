@@ -130,6 +130,9 @@ class DoubleBarrelServer(object):
 
         self._clients = [self._socket]
 
+    def shotgunObject(self):
+        return self._sg
+
     def setMaxThreads(self, maxthreads):
         '''
         Sets the maximum number of threads that can run at one time.

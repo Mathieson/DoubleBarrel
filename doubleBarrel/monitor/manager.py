@@ -57,7 +57,11 @@ class ServerManager(object):
         '''
 
         server.stop()
+
+        # Remove the server from the manager.
         serverIndex = self.servers().index(server)
         self.servers().remove(server)
+
+        # Remove the server from the manager's config file so will not show up again in the future.
         serverConfig = self._config.serverConfigs()[serverIndex]
         self._config.removeServer(serverConfig)

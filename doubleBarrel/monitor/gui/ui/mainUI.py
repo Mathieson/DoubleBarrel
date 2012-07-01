@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\Mat\workspace\doubleBarrel\doubleBarrel\monitor\gui\ui\mainUI.ui'
 #
-# Created: Sat Jun 30 21:52:33 2012
+# Created: Sat Jun 30 23:39:54 2012
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -30,10 +30,13 @@ class Ui_mainUi(object):
         self.logSplitter.setOrientation(QtCore.Qt.Vertical)
         self.logSplitter.setObjectName(_fromUtf8("logSplitter"))
         self.serverTree = QtGui.QTreeWidget(self.logSplitter)
+        self.serverTree.setAlternatingRowColors(True)
         self.serverTree.setAnimated(True)
         self.serverTree.setObjectName(_fromUtf8("serverTree"))
         self.serverTree.headerItem().setText(0, QtGui.QApplication.translate("mainUi", "Script Name", None, QtGui.QApplication.UnicodeUTF8))
-        self.serverTree.header().setVisible(False)
+        self.serverTree.headerItem().setText(1, QtGui.QApplication.translate("mainUi", "Status", None, QtGui.QApplication.UnicodeUTF8))
+        self.serverTree.header().setVisible(True)
+        self.serverTree.header().setStretchLastSection(False)
         self.logOutput = QtGui.QTextBrowser(self.logSplitter)
         self.logOutput.setObjectName(_fromUtf8("logOutput"))
         self.verticalLayout.addWidget(self.logSplitter)
