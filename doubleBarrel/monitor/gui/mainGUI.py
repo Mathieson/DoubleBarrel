@@ -9,18 +9,21 @@ import os
 from ui import mainUI
 from PyQt4 import QtGui, QtCore
 from functools import partial
-from monitor.manager import ServerManager
+from doubleBarrel.monitor.manager import ServerManager
 
 
 class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
+
+    SCRIPT_NAME_COLUMN = 0
+    STATUS_COLUMN = 1
 
     def __init__(self, manager=None):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
 
         self._manager = manager or ServerManager()
-        self._servers = {}  # Stores the QTreeWidget as the key and the server as the value.
-        self._urls = {}  # Stores the url as the key and the QTreeWidget as the value.
+        self._servers = {}  # Stores the QTreeWidgetItem as the key and the server as the value.
+        self._urlGroups = {}  # Stores the url as the key and the QTreeWidget as the value.
 
         self._extraUiSetup()
         self._setupCallbacks()
@@ -50,13 +53,16 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         self.serverTree.header().setResizeMode(0, QtGui.QHeaderView.Stretch)
         self.serverTree.header().setResizeMode(1, QtGui.QHeaderView.Fixed)
 
+        # Reverse the sorting order of the script name column.
+        self.serverTree.sortItems(self.SCRIPT_NAME_COLUMN, QtCore.Qt.AscendingOrder)
+
     def _setupCallbacks(self):
         '''
         Sets up the signal/slot connections for the GUI.
         '''
 
         # Manage the log display changing from toggling the checkbox.
-        self.showLogCheck.stateChanged.connect(self._setLogVis)
+        self.showLogCheck.toggled.connect(self._setLogVis)
 
         # Manage the log display changing from moving the splitter.
         self.logSplitter.splitterMoved.connect(self._setLogChecks)
@@ -80,21 +86,24 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         self.removeButton.clicked.connect(self.removeServerBtnPressed)
         self.removeServerAction.triggered.connect(self.removeServerBtnPressed)
 
+        # Connections for the start and stop server buttons.
+        self.startServerAction.triggered.connect(self.startServerButtonPressed)
+        self.stopServerAction.triggered.connect(self.stopServerButtonPressed)
+
     def _setDefaults(self):
         '''
         Set the default state of the GUI.
         '''
 
         # Ensure the log is displayed properly.
-        self.showLogCheck.stateChanged.emit(self.showLogCheck.checkState())
+        self.showLogCheck.toggled.emit(self.showLogCheck.checkState())
 
         # Add all of the servers from the manager.
         for server in self._manager.servers():
             self._addServerToTree(server)
 
-        # Expand all urlGroups by default.
-        for urlGroup in self._urls.values():
-            urlGroup.setExpanded(True)
+        # Update the server statuses.
+        self.updateServerStatuses()
 
     def _setLogSplitOrient(self, orientation):
         '''
@@ -162,10 +171,10 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         serverIcon = QtGui.QIcon(os.path.abspath(r'icons\server.png'))
         urlGroup.setIcon(0, serverIcon)
         # Add the urlGroup to the storage dict and then return the control.
-        self._urls[url] = urlGroup
+        self._urlGroups[url] = urlGroup
         return urlGroup
 
-    def _addServerToTree(self, server):
+    def _addServerToTree(self, server, updateSelection=False):
         '''
         Adds a server to the tree view. This is separated from the addServerBtnPressed function because it needs to get
         called when the GUI is first initialized.
@@ -175,7 +184,7 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
 
         # Get the serverUrl's tree item and add the server under the URL group.
         serverUrl = sgObj.config.server
-        urlGroup = self._urls.get(serverUrl)
+        urlGroup = self._urlGroups.get(serverUrl)
         if not urlGroup:
             urlGroup = self._addUrlGroupToTree(serverUrl)
 
@@ -183,6 +192,14 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         scriptName = sgObj.config.script_name
         serverItem = QtGui.QTreeWidgetItem(urlGroup, [scriptName])
         self._servers[serverItem] = server
+
+        # Expand the urlGroup and select the newly added server.
+        urlGroup.setExpanded(True)
+        if updateSelection:
+            # Clear the existing selection first.
+            for selectedItem in self.serverTree.selectedItems():
+                self.serverTree.setItemSelected(selectedItem, False)
+            self.serverTree.setItemSelected(serverItem, True)
 
         return serverItem
 
@@ -192,7 +209,16 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         # Bring up a file dialog to allow the user to select an sg file.
         # Call the manager's addServer function, passing it the sg file.
-        pass
+
+        title = "Add a Shotgun server file"
+        startingDir = os.path.dirname(__file__)
+        acceptedFiles = "Shotgun Server Files (*.sg)"
+        sgFilepath = QtGui.QFileDialog.getOpenFileName(self, title, startingDir, acceptedFiles)
+
+        if sgFilepath:
+            servers = self._manager.addServersFromFile(str(sgFilepath))
+            for server in servers:
+                self._addServerToTree(server, updateSelection=True)
 
     def removeServerBtnPressed(self):
         '''
@@ -201,11 +227,72 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
 
         selectedItems = self.serverTree.selectedItems()
         for serverItem in selectedItems:
-            server = self._servers.get(serverItem)
-            # Check to make sure the selected item is a server item and not a urlGroup. We only want to remove servers.
-            if server:
-                self.serverTree.removeItemWidget(serverItem)
-                self._manager.removeServer(server)
+            # Pop the server from the storage dict. This will also remove it.
+            server = self._servers.pop(serverItem)
+            # Remove it from the tree view.
+            serverItem.parent().removeChild(serverItem)
+            # Remove it from the manager.
+            self._manager.removeServer(server)
+
+        # Remove any urlGroups that are now empty.
+        self._purgeUrlGroups()
+
+    def _purgeUrlGroups(self):
+        '''
+        This goes through all urlGroups and checks that they still have child
+        items. If they do not, they will be removed from the GUI and the
+        internal storage dictionary.
+        '''
+
+        # Create a copy of the urlGroups dict so we can change the items during iteration.
+        for url, urlGroup in self._urlGroups.copy().iteritems():
+            # If there are no longer any children.
+            if not urlGroup.childCount():
+                # Remove the urlGroup from the storage dict.
+                self._urlGroups.pop(url)
+                # Remove it from the tree widget.
+                urlGroupIndex = self.serverTree.indexOfTopLevelItem(urlGroup)
+                self.serverTree.takeTopLevelItem(urlGroupIndex)
+
+    def updateServerStatuses(self):
+        '''
+        Updates the status column for each server object.
+        '''
+
+        for serverItem, server in self._servers.iteritems():
+            # If the server is running, check whether there are any errors.
+            if server.isRunning():
+                # If there are no errors, add the smiley/yellow icon.
+                if not server.hasErrored():
+                    status = "Running"
+                # If there are errors, add the frown/red icon.
+                else:
+                    status = "Errored"
+            # If the server is not running, add the sleeping/blue icon.
+            else:
+                status = "Stopped"
+
+            serverItem.setText(self.STATUS_COLUMN, status)
+
+    def startServerButtonPressed(self):
+        '''
+        Starts the currently selected server(s).
+        '''
+
+        for server in self.selectedServers():
+            server.start()
+
+        self.updateServerStatuses()
+
+    def stopServerButtonPressed(self):
+        '''
+        Stops the currently selected server(s).
+        '''
+
+        for server in self.selectedServers():
+            server.stop()
+
+        self.updateServerStatuses()
 
 
 if __name__ == '__main__':

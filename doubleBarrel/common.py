@@ -108,7 +108,7 @@ def getLogMessage(header, sock, **kwargs):
     else:
         raise ValueError("sock must be a socket or tuple with host and port information")
 
-    host = socket.gethostbyaddr(host)[0]
+    host = socket.gethostbyname(host)[0]
 
     kwargMessages = ['%-10s: %s' % item for item in kwargs.items()]
     return ' - '.join([LOGGER_MSG] + kwargMessages) % (header, host, port)

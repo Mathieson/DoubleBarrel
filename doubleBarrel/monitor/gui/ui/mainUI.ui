@@ -40,12 +40,6 @@
        <attribute name="headerStretchLastSection">
         <bool>false</bool>
        </attribute>
-       <attribute name="headerVisible">
-        <bool>true</bool>
-       </attribute>
-       <attribute name="headerStretchLastSection">
-        <bool>false</bool>
-       </attribute>
        <column>
         <property name="text">
          <string>Script Name</string>
@@ -114,6 +108,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="addButton">
+        <property name="maximumSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
         <property name="toolTip">
          <string extracomment="Add Server"/>
         </property>
@@ -137,6 +137,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="removeButton">
+        <property name="maximumSize">
+         <size>
+          <width>32</width>
+          <height>32</height>
+         </size>
+        </property>
         <property name="toolTip">
          <string extracomment="Remove Server"/>
         </property>
@@ -168,7 +174,7 @@
      <x>0</x>
      <y>0</y>
      <width>893</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuManage">
@@ -179,6 +185,9 @@
     <addaction name="removeServerAction"/>
     <addaction name="separator"/>
     <addaction name="restartServerAction"/>
+    <addaction name="separator"/>
+    <addaction name="startServerAction"/>
+    <addaction name="stopServerAction"/>
    </widget>
    <widget class="QMenu" name="menuLog">
     <property name="title">
@@ -305,6 +314,16 @@
    </property>
    <property name="text">
     <string>Set Server File</string>
+   </property>
+  </action>
+  <action name="startServerAction">
+   <property name="text">
+    <string>Start Server</string>
+   </property>
+  </action>
+  <action name="stopServerAction">
+   <property name="text">
+    <string>Stop Server</string>
    </property>
   </action>
  </widget>

@@ -11,4 +11,4 @@ from doubleBarrel import DoubleBarrelServer
 if __name__ == '__main__':
     dirPath = os.path.dirname(__file__)
     sgFile = os.path.join(dirPath, 'doubleBarrel.sg')
-    sg = DoubleBarrelServer(sgFile).start()
+    sg = DoubleBarrelServer(sgFile).run()

@@ -35,7 +35,7 @@ def _funcToString(funcName, *args, **kwargs):
     return '%s(%s)' % (funcName, ', '.join(allArgs))
 
 
-class DoubleBarrelThread(Thread):
+class ShotgunCommandThread(Thread):
     '''
     Allows threaded Shotgun interaction. We are having a queue of transaction
     requests come into the server. It is not efficient to have the queue wait
@@ -87,7 +87,7 @@ class DoubleBarrelThread(Thread):
         dynasocket.send(self._socket, str(results))
 
 
-class DoubleBarrelServer(object):
+class DoubleBarrelServer(Thread):
     '''
     Opens a socket using the host and port provided. Intended to be used as a
     daemon process. Requires a Shotgun object as well.
@@ -97,24 +97,23 @@ class DoubleBarrelServer(object):
     def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
 
+        Thread.__init__(self)
+
         # Create the Shotgun object that will be used throughout the server.
         sg = Shotgun(base_url, script_name, api_key, convert_datetimes_to_utc,
                      http_proxy, ensure_ascii, connect)
 
-        if not host:
-            host = socket.gethostname()
-
-        if not port:
-            port = common.appKeyToPort(sg.config.api_key)
+        host = host or socket.gethostname()
+        port = port or common.appKeyToPort(sg.config.api_key)
 
         if not isinstance(host, str):
             logMsg = "host must be a string"
             logger.critical(logMsg)
             raise ValueError(logMsg)
 
-        portThresh = 2000
-        if not isinstance(port, int) or port < portThresh:
-            logMsg = "port must be an integer larger than %i" % portThresh
+        minPort = 2000
+        if not isinstance(port, int) or port < minPort:
+            logMsg = "port must be an integer larger than %i" % minPort
             logger.critical(logMsg)
             raise ValueError(logMsg)
 
@@ -129,6 +128,9 @@ class DoubleBarrelServer(object):
         self._socket.listen(5)
 
         self._clients = [self._socket]
+
+        self._isRunning = False
+        self._hasErrored = False
 
     def shotgunObject(self):
         return self._sg
@@ -149,9 +151,24 @@ class DoubleBarrelServer(object):
         kill the infinite looping of the server.
         '''
 
+        # Stop the loop
         self._isRunning = False
+        # Send a message to the socket for it to stop monitoring.
+        self._socket.close()
 
-    def start(self):
+    def isRunning(self):
+        return self._isRunning
+
+    def hasErrored(self):
+        return self._hasErrored
+
+    def log(self):
+        pass
+
+    def activeLog(self):
+        pass
+
+    def run(self):
         '''
         Starts the server watching for messages. This will receive messages and
         handle them appropriately. Messages are either clients connecting or
@@ -165,7 +182,7 @@ class DoubleBarrelServer(object):
 
         while self._isRunning:
             # Get all of our sockets that have communications occurring.
-            sread, swrite, sexc = select.select(self._clients, [], []) #@UnusedVariable
+            sread, swrite, sexc = select.select(self._clients, [], [])   #@UnusedVariable
 
             for sock in sread:
                 # If the signal is coming from the server socket.
@@ -185,12 +202,13 @@ class DoubleBarrelServer(object):
                             while 1:
                                 # Loop until we have a free thread available.
                                 if threading.activeCount() < self._maxThreads:
-                                    DoubleBarrelThread(self._sg, funcData, sock).start()
+                                    ShotgunCommandThread(self._sg, funcData, sock).start()
                                     break
                         else:
                             # If there is no message, our client has disconnected.
                             self.disconnectClient(sock)
                     except:
+                        self._hasErrored = True
                         self.disconnectClient(sock)
 
     def disconnectClient(self, client):
