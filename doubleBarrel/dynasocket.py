@@ -34,7 +34,7 @@ def send(sock, message):
         # Send the actual message.
         sock.send(message)
     except:
-        logMsg = common.getLogMessage("Client no longer connected", sock)
+        logMsg = common.getLogMessage("Socket is no longer connected", sock)
         logger.error(logMsg)
 
 

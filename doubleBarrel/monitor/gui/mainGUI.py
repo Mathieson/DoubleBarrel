@@ -6,10 +6,31 @@ Created on 2012-06-15
 
 import sys
 import os
+import io
+import logging
 from ui import mainUI
 from PyQt4 import QtGui, QtCore
 from functools import partial
 from doubleBarrel.monitor.manager import ServerManager
+
+
+class PyQtLogHandler(logging.Handler):
+    '''
+    A custom logging handler object that will write our log to a provided QTextBrowser widget.
+    '''
+
+    def __init__(self, destWidget):
+        logging.Handler.__init__(self)
+        self._destWidget = destWidget
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            self._destWidget.append(msg)
+        except(KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
 
 class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
@@ -24,6 +45,7 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         self._manager = manager or ServerManager()
         self._servers = {}  # Stores the QTreeWidgetItem as the key and the server as the value.
         self._urlGroups = {}  # Stores the url as the key and the QTreeWidget as the value.
+        self._serverLogWidgets = {}
 
         self._extraUiSetup()
         self._setupCallbacks()
@@ -201,6 +223,9 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
                 self.serverTree.setItemSelected(selectedItem, False)
             self.serverTree.setItemSelected(serverItem, True)
 
+        # Add a widget for displaying the server's log.
+        self._createServerLogWidget(server)
+
         return serverItem
 
     def addServerBtnPressed(self):
@@ -219,6 +244,22 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
             servers = self._manager.addServersFromFile(str(sgFilepath))
             for server in servers:
                 self._addServerToTree(server, updateSelection=True)
+
+    def _createServerLogWidget(self, server):
+        '''
+        Creates an object for displaying the log for the provided server.
+        '''
+
+        # Create the widget, add it to the storage dictionary, and hide it by default.
+        logDisplayWidget = QtGui.QTextBrowser(self.logDock)
+        self._serverLogWidgets[server] = logDisplayWidget
+        logDisplayWidget.setVisible(False)
+
+        # Set it up so the server's log gets automatically written to the widget.
+        logger = server.logger()
+        # Create a PyQtLogHandler for our logger to write to our widget.
+        pyqtHandler = PyQtLogHandler(logDisplayWidget)
+        logger.addHandler(pyqtHandler)
 
     def removeServerBtnPressed(self):
         '''
@@ -280,8 +321,7 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
 
         for server in self.selectedServers():
-            server.start()
-
+            self._manager.startServer(server)
         self.updateServerStatuses()
 
     def stopServerButtonPressed(self):
@@ -290,8 +330,16 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
 
         for server in self.selectedServers():
-            server.stop()
+            self._manager.stopServer(server)
+        self.updateServerStatuses()
 
+    def restartServerButtonPressed(self):
+        '''
+        Restarts the currently selected server(s).
+        '''
+
+        for server in self.selectedServers():
+            self._manager.restartServer(server)
         self.updateServerStatuses()
 
 

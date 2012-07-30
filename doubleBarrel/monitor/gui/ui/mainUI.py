@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/Users/Mat/Documents/workspace/doubleBarrel/doubleBarrel/monitor/gui/ui/mainUI.ui'
 #
-# Created: Sun Jul 22 00:42:05 2012
+# Created: Sun Jul 29 23:01:12 2012
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -23,8 +23,8 @@ class Ui_mainUi(object):
         mainUi.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(mainUi)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.verticalLayout_3 = QtGui.QVBoxLayout(self.centralwidget)
+        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.logSplitter = QtGui.QSplitter(self.centralwidget)
         self.logSplitter.setOrientation(QtCore.Qt.Vertical)
         self.logSplitter.setObjectName(_fromUtf8("logSplitter"))
@@ -34,9 +34,16 @@ class Ui_mainUi(object):
         self.serverTree.setObjectName(_fromUtf8("serverTree"))
         self.serverTree.header().setVisible(True)
         self.serverTree.header().setStretchLastSection(False)
-        self.logOutput = QtGui.QTextBrowser(self.logSplitter)
+        self.logDock = QtGui.QWidget(self.logSplitter)
+        self.logDock.setObjectName(_fromUtf8("logDock"))
+        self.verticalLayout = QtGui.QVBoxLayout(self.logDock)
+        self.verticalLayout.setMargin(0)
+        self.verticalLayout.setMargin(0)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.logOutput = QtGui.QTextBrowser(self.logDock)
         self.logOutput.setObjectName(_fromUtf8("logOutput"))
-        self.verticalLayout.addWidget(self.logSplitter)
+        self.verticalLayout.addWidget(self.logOutput)
+        self.verticalLayout_3.addWidget(self.logSplitter)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.verticalLayout_2 = QtGui.QVBoxLayout()
@@ -76,7 +83,7 @@ class Ui_mainUi(object):
         self.removeButton.setFlat(True)
         self.removeButton.setObjectName(_fromUtf8("removeButton"))
         self.horizontalLayout.addWidget(self.removeButton)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
         mainUi.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(mainUi)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 893, 22))

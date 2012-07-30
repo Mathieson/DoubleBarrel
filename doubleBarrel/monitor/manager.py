@@ -72,3 +72,36 @@ class ServerManager(object):
         # Remove the server from the manager's config file so will not show up again in the future.
         serverConfig = self._config.serverConfigs()[serverIndex]
         self._config.removeServer(serverConfig)
+
+    def stopServer(self, server):
+        '''
+        Stops the provided server from running. The object will still exist, but will no longer be
+        processing any incoming requests.
+        '''
+
+        server.stop()
+
+    def startServer(self, server):
+        '''
+        Starts the provided server object. This is also used to start a server after it has been
+        stopped. This is a special case since you cannot usually start up a thread again after it
+        has already been run once.
+        '''
+
+        sg = server.shotgunObject()
+        base_url = sg.base_url
+        script_name = sg.config.script_name
+        api_key = sg.config.api_key
+        convert_datetimes_to_utc = sg.config.convert_datetimes_to_utc
+        http_proxy = sg.config.proxy_server
+        ensure_ascii = sg._json_loads
+        server.__init__(base_url, script_name, api_key, convert_datetimes_to_utc, http_proxy, ensure_ascii)
+        server.start()
+
+    def restartServer(self, server):
+        '''
+        Just stops the provided server and starts it again immediately after.
+        '''
+
+        self.stopServer(server)
+        self.startServer(server)

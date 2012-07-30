@@ -18,7 +18,7 @@
     <normaloff>:/icons/compedShotgun.png</normaloff>:/icons/compedShotgun.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
      <widget class="QSplitter" name="logSplitter">
       <property name="orientation">
@@ -51,7 +51,16 @@
         </property>
        </column>
       </widget>
-      <widget class="QTextBrowser" name="logOutput"/>
+      <widget class="QWidget" name="logDock" native="true">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QTextBrowser" name="logOutput"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>

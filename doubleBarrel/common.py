@@ -108,7 +108,7 @@ def getLogMessage(header, sock, **kwargs):
     else:
         raise ValueError("sock must be a socket or tuple with host and port information")
 
-    host = socket.gethostbyname(host)[0]
+    host = socket.gethostbyname_ex(host)[0]
 
     kwargMessages = ['%-10s: %s' % item for item in kwargs.items()]
     return ' - '.join([LOGGER_MSG] + kwargMessages) % (header, host, port)
@@ -182,28 +182,14 @@ def _configureServerLogger():
     logger.setLevel(logging.INFO)
     logger.propagate = False
 
-    # Get the name of our main module, as it will be used in the log file name.
-    mainModule = sys.modules['__main__']
-    baseName = os.path.basename(mainModule.__file__)
-    moduleName, ext = os.path.splitext(baseName) #@UnusedVariable
-
-    # Create a file handler that will track everything.
-    serverFile = os.path.join(os.path.dirname(__file__),
-                              "logs", "server", "%s.log" % moduleName)
-    _createDir(os.path.dirname(serverFile))
-    fileHandler = logging.handlers.RotatingFileHandler(serverFile)
-    fileHandler.setLevel(logging.INFO)
-
     # Create a stream handler for our console that will show errors.
     screenHandler = logging.StreamHandler()
     screenHandler.setLevel(logging.INFO)
 
     # Set the formatter.
-    fileHandler.setFormatter(_fileFormatter())
     screenHandler.setFormatter(_screenFormatter())
 
     # Add our handlers to our logger.
-    logger.addHandler(fileHandler)
     logger.addHandler(screenHandler)
 
 

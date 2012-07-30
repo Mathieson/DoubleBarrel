@@ -7,6 +7,7 @@ Created on Mar 9, 2012
 #TODO: Implement some sort of maximum number of connections check. If we have reached the maximum number of connections, close the ones that have not been accessed in a long time.
 #TODO: Implement a switch for the log. Suspect writing everything to the console and file may slow things down a bit. Is it really necessary? Maybe default to file only and give an option to enable console.
 
+import os
 import ast
 import socket
 import select
@@ -14,12 +15,12 @@ import threading
 import common
 import logging
 import dynasocket
+from StringIO import StringIO
 from shotgun_api3 import Shotgun
 from threading import Thread
 from copy import copy
 
 
-logger = logging.getLogger('server')
 socket.setdefaulttimeout(common.SOCKET_TIMEOUT)
 
 
@@ -55,6 +56,8 @@ class ShotgunCommandThread(Thread):
         if not isinstance(sock, socket.socket):
             raise ValueError("sock must be a socket")
 
+        self._logger = logging.getLogger('server.%s' % sg.config.script_name)
+
         Thread.__init__(self)
         self._sg = copy(sg)  # Make a copy. Risk crashing otherwise.
         self._funcData = funcData
@@ -76,13 +79,13 @@ class ShotgunCommandThread(Thread):
         if funcName and hasattr(self._sg, funcName):
             queryString = _funcToString(funcName, *args, **kwargs)
             logMsg = common.getLogMessage("Querying Shotgun", self._socket, Query=queryString)
-            logger.info(logMsg)
+            self._logger.info(logMsg)
 
             func = getattr(self._sg, funcName)
             results = func(*args, **kwargs)
 
         logMsg = common.getLogMessage("Sending results", self._socket, Results=results)
-        logger.info(logMsg)
+        self._logger.info(logMsg)
 
         dynasocket.send(self._socket, str(results))
 
@@ -97,24 +100,25 @@ class DoubleBarrelServer(Thread):
     def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
 
+        self._configureLogger(script_name)
+
         Thread.__init__(self)
 
         # Create the Shotgun object that will be used throughout the server.
-        sg = Shotgun(base_url, script_name, api_key, convert_datetimes_to_utc,
-                     http_proxy, ensure_ascii, connect)
+        sg = Shotgun(base_url, script_name, api_key, convert_datetimes_to_utc, http_proxy, ensure_ascii, connect)
 
         host = host or socket.gethostname()
         port = port or common.appKeyToPort(sg.config.api_key)
 
         if not isinstance(host, str):
             logMsg = "host must be a string"
-            logger.critical(logMsg)
+            self.logger().critical(logMsg)
             raise ValueError(logMsg)
 
         minPort = 2000
         if not isinstance(port, int) or port < minPort:
             logMsg = "port must be an integer larger than %i" % minPort
-            logger.critical(logMsg)
+            self.logger().critical(logMsg)
             raise ValueError(logMsg)
 
         self._sg = sg
@@ -131,6 +135,33 @@ class DoubleBarrelServer(Thread):
 
         self._isRunning = False
         self._hasErrored = False
+        self._needsReInit = False
+
+    def _configureLogger(self, serverName):
+        '''
+        Configures a logger for this server instance.
+        '''
+
+        # Create a logger specifically for this server name.
+        logger = logging.getLogger('server.%s' % serverName)
+        # Determine the path for where the log file should be saved.
+        serverFile = os.path.join(os.path.dirname(__file__), 'logs', 'server', '%s.log' % serverName)
+        # Make sure that directory exists.
+        common._createDir(os.path.dirname(serverFile))
+        # Create a rotating file handler and set it for the logger.
+        fileHandler = logging.handlers.RotatingFileHandler(serverFile)
+        fileHandler.setLevel(logging.INFO)
+        fileHandler.setFormatter(common._fileFormatter())
+        logger.addHandler(fileHandler)
+
+        # Create a stream object and then use it to create a stream handler.
+        logStream = StringIO()
+        streamHandler = logging.StreamHandler(stream=logStream)
+        logger.addHandler(streamHandler)
+
+        # Set the logger object as the server's logger, and the stream as the server's log.
+        self._logger = logger
+        self._log = logStream
 
     def shotgunObject(self):
         return self._sg
@@ -153,8 +184,6 @@ class DoubleBarrelServer(Thread):
 
         # Stop the loop
         self._isRunning = False
-        # Send a message to the socket for it to stop monitoring.
-        self._socket.close()
 
     def isRunning(self):
         return self._isRunning
@@ -163,10 +192,10 @@ class DoubleBarrelServer(Thread):
         return self._hasErrored
 
     def log(self):
-        pass
+        return self._log
 
-    def activeLog(self):
-        pass
+    def logger(self):
+        return self._logger
 
     def run(self):
         '''
@@ -176,13 +205,14 @@ class DoubleBarrelServer(Thread):
         '''
 
         self._isRunning = True
+        self._needsReInit = True
 
         logMsg = common.getLogMessage("DoubleBarrel server started", (self._host, self._port))
-        logger.info(logMsg)
+        self.logger().info(logMsg)
 
         while self._isRunning:
             # Get all of our sockets that have communications occurring.
-            sread, swrite, sexc = select.select(self._clients, [], [])   #@UnusedVariable
+            sread, swrite, sexc = select.select(self._clients, [], [], 0.1)   #@UnusedVariable
 
             for sock in sread:
                 # If the signal is coming from the server socket.
@@ -196,7 +226,7 @@ class DoubleBarrelServer(Thread):
                         if msg:
                             # If we have a message, it is a Shotgun transaction.
                             logMsg = common.getLogMessage("Message received", sock, Message=msg)
-                            logger.info(logMsg)
+                            self.logger().info(logMsg)
                             # Convert our message into a dictionary we can use.
                             funcData = ast.literal_eval(msg)
                             while 1:
@@ -211,6 +241,10 @@ class DoubleBarrelServer(Thread):
                         self._hasErrored = True
                         self.disconnectClient(sock)
 
+        # Kill the socket since we are no longer in the loop.
+        logMsg = common.getLogMessage("Stopping server", self._socket)
+        self._socket.close()
+
     def disconnectClient(self, client):
         '''
         Disconnects the client by closing the socket connection and then
@@ -218,7 +252,7 @@ class DoubleBarrelServer(Thread):
         '''
 
         logMsg = common.getLogMessage("Client disconnected", client)
-        logger.info(logMsg)
+        self.logger().info(logMsg)
         client.close()
         self._clients.remove(client)
 
@@ -249,7 +283,7 @@ class DoubleBarrelServer(Thread):
         and script_name == self._sg.config.script_name \
         and api_key == self._sg.config.api_key:
             self._clients.append(newsock)
-            logger.info(common.getLogMessage("Client Connected", newsock))
+            self.logger().info(common.getLogMessage("Client Connected", newsock))
             dynasocket.send(newsock, common.CONNECT_SUCCESS_MSG)
             return True
         else:
