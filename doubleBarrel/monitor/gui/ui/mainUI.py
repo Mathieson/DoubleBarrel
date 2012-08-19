@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/Users/Mat/Documents/workspace/doubleBarrel/doubleBarrel/monitor/gui/ui/mainUI.ui'
 #
-# Created: Sun Jul 29 23:01:12 2012
+# Created: Fri Aug 17 17:46:09 2012
 #      by: PyQt4 UI code generator 4.9.4
 #
 # WARNING! All changes made in this file will be lost!
