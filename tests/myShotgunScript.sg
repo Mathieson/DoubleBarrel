@@ -1,0 +1,4 @@
+[ShotgunData]
+base_url=<YOUR SHOTGUN URL>
+script_name=<YOUR SCRIPT NAME>
+api_key=<YOUR SCRIPT KEY>
