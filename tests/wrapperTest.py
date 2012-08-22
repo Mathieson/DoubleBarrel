@@ -3,8 +3,8 @@ Created on Mar 21, 2012
 
 @author: mat.facer
 '''
-
 import os
+import string
 from ConfigParser import ConfigParser
 from doubleBarrel import DoubleBarrel
 from shotgun_api3 import Shotgun
@@ -28,10 +28,9 @@ class DoubleBarrelTest(object):
         Returns a Shotgun/DoubleBarrel object, depending on what was specified
         when the test class was created.
         '''
-
         config = ConfigParser()
         dirPath = os.path.dirname(__file__)
-        sgFile = os.path.join(dirPath, 'doubleBarrel.sg')
+        sgFile = os.path.join(dirPath, 'myShotgunScript.sg')
         config.read(sgFile)
         shotgunData = dict(config.items('ShotgunData'))
         serverPath = shotgunData.get('base_url')
@@ -43,21 +42,18 @@ class DoubleBarrelTest(object):
         '''
         Performs the standard test query to Shotgun.
         '''
-
         return shotgunObject.find('Project', [])
 
     def testTimes(self):
         '''
         All of the test times, in the order they occurred.
         '''
-
         return self._testTimes
 
     def timeHits(self):
         '''
         The number of times a query took said amount of time.
         '''
-
         roundedTimes = ['%.1f' % testTime for testTime in self.testTimes()]
         uniqueTimes = sorted(list(set(roundedTimes)))
         timeHits = []
@@ -76,20 +72,27 @@ class DoubleBarrelTest(object):
         '''
         The test time right in the middle of the results.
         '''
-
         midIndex = int(len(self.testTimes()) / 2)
         return sorted(self.testTimes())[midIndex]
+
+    def _strToInt(self, theString):
+        '''
+        Converts a string to an int, removing all non numeric characters in
+        the process.
+        '''
+        nonDigitChars = string.printable.translate(None, string.digits)
+        return int(theString.translate(None, nonDigitChars))
 
     def modeTime(self):
         '''
         The time that was most frequent, rounded to the number of decimals.
         '''
-
         timeHits = self.timeHits()
-        # Sort the time counts into a dictionary with the counts being the keys.
+        # Sort time counts into a dictionary with the counts being the keys.
         hitsDict = {}
         for timeCount in timeHits:
             time, count = timeCount
+            count = self._strToInt(count)
             hitsDict.setdefault(count, [])
             hitsDict[count].append(time)
         # Return the list of times with the highest hit count.
@@ -99,14 +102,12 @@ class DoubleBarrelTest(object):
         '''
         The average time each query took.
         '''
-
         return self.totalTime() / float(self.LOOPS)
 
     def totalTime(self):
         '''
         Gets the total amount of time the testing took.
         '''
-
         totalTime = 0
         for testTime in self.testTimes():
             totalTime += testTime
@@ -116,7 +117,6 @@ class DoubleBarrelTest(object):
         '''
         This is the generic test function.
         '''
-
         print "Speed test - Class: %s Function: %s Units: Seconds" % \
             (self.testClass().__name__, funcToTest.__name__)
         for i in range(loops): #@UnusedVariable
@@ -138,7 +138,6 @@ class IndividualQueryTest(DoubleBarrelTest):
         '''
         Creates a Shotgun/DoubleBarrel object and does a single query.
         '''
-
         sg = self._getShotgunObject()
         results = self._queryShotgun(sg)
         if self.PRINT_RESULTS:
@@ -154,7 +153,6 @@ class MultipleQueryTest(DoubleBarrelTest):
         '''
         Creates a Shotgun/DoubleBarrel object and does multiple queries.
         '''
-
         sg = self._getShotgunObject()
         for i in range(self.LOOPS): #@UnusedVariable
             results = self._queryShotgun(sg)

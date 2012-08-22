@@ -3,7 +3,6 @@ Created on Mar 9, 2012
 
 @author: mat.facer
 '''
-
 #TODO: Implement some sort of maximum number of connections check. If we have reached the maximum number of connections, close the ones that have not been accessed in a long time.
 #TODO: Implement a switch for the log. Suspect writing everything to the console and file may slow things down a bit. Is it really necessary? Maybe default to file only and give an option to enable console.
 
@@ -30,7 +29,6 @@ def _funcToString(funcName, *args, **kwargs):
     a string that looks like this function call. This is intended for logging
     purposes only.
     '''
-
     allArgs = str(args)[1:-1].replace(' ', '').split(',')
     allArgs.extend(['%s=%s' % item for item in kwargs])
     return '%s(%s)' % (funcName, ', '.join(allArgs))
@@ -44,7 +42,6 @@ class ShotgunCommandThread(Thread):
     item. We need to split the transactions up as soon as they come in so that
     we are not waiting as long.
     '''
-
     def __init__(self, sg, funcData, sock):
 
         if not isinstance(sg, Shotgun):
@@ -68,7 +65,6 @@ class ShotgunCommandThread(Thread):
         Performs the Shotgun transaction and then sends the results back
         through the socket.
         '''
-
         # Get our function data from the funcdata dict.
         funcName = self._funcData.get(common.FUNC_NAME)
         args = self._funcData.get(common.ARGS)
@@ -95,7 +91,6 @@ class DoubleBarrelServer(Thread):
     Opens a socket using the host and port provided. Intended to be used as a
     daemon process. Requires a Shotgun object as well.
     '''
-
     @common.createUsingShotgunAuthFile
     def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
@@ -141,7 +136,6 @@ class DoubleBarrelServer(Thread):
         '''
         Configures a logger for this server instance.
         '''
-
         # Create a logger specifically for this server name.
         logger = logging.getLogger('server.%s' % serverName)
         # Determine the path for where the log file should be saved.
@@ -170,7 +164,6 @@ class DoubleBarrelServer(Thread):
         '''
         Sets the maximum number of threads that can run at one time.
         '''
-
         if not isinstance(maxthreads, int) or maxthreads < 0:
             raise ValueError("maxthreads must be a positive integer")
 
@@ -181,7 +174,6 @@ class DoubleBarrelServer(Thread):
         Stops the server by setting the _isRunning variable to false. This will
         kill the infinite looping of the server.
         '''
-
         # Stop the loop
         self._isRunning = False
 
@@ -203,7 +195,6 @@ class DoubleBarrelServer(Thread):
         handle them appropriately. Messages are either clients connecting or
         disconnecting, or a Shotgun transaction request coming in from a client.
         '''
-
         self._isRunning = True
         self._needsReInit = True
 
@@ -250,7 +241,6 @@ class DoubleBarrelServer(Thread):
         Disconnects the client by closing the socket connection and then
         removing it from the list of active clients.
         '''
-
         logMsg = common.getLogMessage("Client disconnected", client)
         self.logger().info(logMsg)
         client.close()
@@ -262,7 +252,6 @@ class DoubleBarrelServer(Thread):
         If it passes authorization, it will add it to the active clients list so
         we start receiving messages from it.
         '''
-
         newsock, (host, port) = self._socket.accept() #@UnusedVariable
 
         # Create a variable to keep track of if we have failed the connection.

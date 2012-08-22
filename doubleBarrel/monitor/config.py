@@ -3,7 +3,6 @@ Created on 2012-06-20
 
 @author: Mat
 '''
-
 import os
 from doubleBarrel import common
 from ConfigParser import ConfigParser
@@ -26,7 +25,6 @@ class MonitorConfig(object):
         '''
         Reads the data in from the config file.
         '''
-
         if os.path.exists(self._configFile):
             self._config.read(self._configFile)
 
@@ -34,7 +32,6 @@ class MonitorConfig(object):
         '''
         Writes out the settings to the file.
         '''
-
         with open(self._configFile, 'wb') as configfile:
             self._config.write(configfile)
 
@@ -42,7 +39,6 @@ class MonitorConfig(object):
         '''
         Returns the server names and files in a dictionary.
         '''
-
         serverFiles = {}
         if self._config.has_section(self.SERVER_FILES_SECTION):
             serverFiles.update((self._config.items(self.SERVER_FILES_SECTION)))
@@ -52,7 +48,6 @@ class MonitorConfig(object):
         '''
         Turns the stored server files into server configs.
         '''
-
         self._serverConfigs = [ServerConfig(serverFile)
                                for serverFile in self.serverFiles().values()]
 
@@ -60,21 +55,18 @@ class MonitorConfig(object):
         '''
         Adds a server config object to the stored list.
         '''
-
         self.serverConfigs().append(serverConfig)
 
     def serverConfigs(self):
         '''
         Returns the server config this monitor is using.
         '''
-
         return self._serverConfigs
 
     def addServerConfig(self, serverConfig):
         '''
         This will add a server file's filepath to the config file.
         '''
-
         if not self._config.has_section(self.SERVER_FILES_SECTION):
             self._config.add_section(self.SERVER_FILES_SECTION)
 
@@ -101,7 +93,6 @@ class MonitorConfig(object):
         than one server if there have been multiple authKeys set up in a single
         sg file.
         '''
-
         if not self._config.has_section(self.SERVER_FILES_SECTION):
             return True
 
@@ -150,7 +141,6 @@ class ServerConfig(object):
         key in the Shotgun file no keyName is necessary and this will return that one and only key. If neither of these
         cases are met a value of None will be returned.
         '''
-
         # If there is only one authKey, return it.
         if len(self.authKeys()) == 1:
             return self.authKeys()[0]
@@ -161,7 +151,6 @@ class ServerConfig(object):
         '''
         Returns the section names for each key from the INI file.
         '''
-
         return self._authKeys.keys()
 
     def read(self):
@@ -169,7 +158,6 @@ class ServerConfig(object):
         This will read the data in from the file and then return a list of
         ShotgunAuthKey dictionaries with the login data for servers.
         '''
-
         self._config.read(self._configFile)
         self._authKeys = dict([(key, ShotgunAuthKey(self._config.items(key)))
                           for key in self._config.sections()])
@@ -181,7 +169,6 @@ class ShotgunAuthKey(dict):
         '''
         Initializes the dictionary as normal and then performs some sanity checks immediately afterwards.
         '''
-
         dict.__init__(self, *args, **kwargs)
         self._isValid()
 
@@ -189,7 +176,6 @@ class ShotgunAuthKey(dict):
         '''
         Runs sanity checks to ensure the auth key is valid for Shotgun server generation.
         '''
-
         for key in (common.AUTH_SERVER, common.AUTH_SCRIPT, common.AUTH_KEY):
             if not self.has_key(key):
                 raise ValueError("Required key missing from Shotgun file: %s" % key)

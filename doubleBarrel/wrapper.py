@@ -3,7 +3,6 @@ Created on Mar 12, 2012
 
 @author: mat.facer
 '''
-
 import socket
 import common
 import logging
@@ -21,7 +20,6 @@ def shotgunInteraction(func):
     a socket connection or called on our Shotgun object. It will call the methods
     dynamically.
     '''
-
     def wrapper(self, *args, **kwargs):
 
         if self._sgclient:
@@ -44,7 +42,6 @@ class DoubleBarrel(Shotgun):
     network. If it finds one, it will create a socket connection and make
     database transactions through that channel instead.
     '''
-
     @common.createUsingShotgunAuthFile
     def __init__(self, base_url, script_name, api_key, convert_datetimes_to_utc=True,
         http_proxy=None, ensure_ascii=True, connect=True, host=None, port=None):
@@ -55,7 +52,6 @@ class DoubleBarrel(Shotgun):
         not have a host and port specified, or do not find a connection, we will
         fall back and connect to the actual Shotgun server instead.
         '''
-
         Shotgun.__init__(self, base_url, script_name, api_key,
             convert_datetimes_to_utc=convert_datetimes_to_utc,
             http_proxy=http_proxy, ensure_ascii=ensure_ascii,
@@ -87,7 +83,6 @@ class DoubleBarrel(Shotgun):
         Attempts to connect to a Double Barrel Server first, then connects
         directly to Shotgun if failed.
         '''
-
         # Attempt to open a socket at the host and port.
         sgclient = DoubleBarrelClient(self, self.host(), self.port())
         if sgclient.connect():

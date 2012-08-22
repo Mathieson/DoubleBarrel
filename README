@@ -1,50 +1,155 @@
-This is an API wrapper for Shotgun. This wrapper should be used by scripts that
-are only quickly connecting, making a query and then disconnecting. It provides
-a speed improvement over the regular Shotgun API.
+# -------------------------------------------------------------
+What
+# -------------------------------------------------------------
+This is an API wrapper for Shotgun aimed to provide speed enhancements.
+It has been designed specifically for scripts that quickly connect, get some
+data, and then disconnect.
 
-# -----------------------------------------------------------------------------
-Purpose
-# -----------------------------------------------------------------------------
-The regular Shotgun API can be slow when initializing a Shotgun object. It can
-add anywhere from .5 to 5 seconds onto the startup time. Once connected,
-however, talking to the database can be quite fast. This can cause an annoyance
-for tools that simply need to connect to grab one piece of data and then 
-disconnect. Think along the lines of setting a shot's frame range upon opening
-a Maya file or Nuke script.
+This also improves slow performance from within Maya and 3DS Max. Both
+of these programs have serious speed issues when calling Shotgun directly.
+Query times that can be 10-50 seconds from within these programs, but
+when using this wrapper the times are the same as usual.
 
-# -----------------------------------------------------------------------------
-Concept
-# -----------------------------------------------------------------------------
-The concept behind this wrapper is quite simple. Using the knowledge above that
-Shotgun can be slow to connect, but speedy once connected, I have just removed
-the requirement of making a new connection every single time. Instead, this
-wrapper creates a single connection to the Shotgun database, leaving it open
-indefinitely. We then also open up a socket. Our wrapper, which looks exactly
-like the regular Shotgun API, also takes a host and port argument. Rather than
-establishing a new connection using the regular method included in the Shotgun
-object, it connects to that socket. Then, when we send requests to Shotgun,
-those requests are sent through the socket to the existing Shotgun connection,
-it quickly does the query and then sends the results back through.
 
-# -----------------------------------------------------------------------------
-Example Usage
-# -----------------------------------------------------------------------------
-Look at the files inside the tests directory for examples of how to use this API
-wrapper. You will need to create a config file, named config.py, in the tests
-folder and put your Shotgun script authorization details in there. The variable
-names should be named as followed:
+# -------------------------------------------------------------
+Test results
+# -------------------------------------------------------------
+Here are the results of a time test for the wrapper vs. the regular Shotgun
+API. There are two different tests happening.
 
-SERVER_PATH
-SCRIPT_NAME
-SCRIPT_KEY
+The first test is of 100 individual queries being made. An individual query
+is creating a database connection, making a single query, disconnecting,
+and then repeating the process for the next query.
 
-Run the serverTest.py file first to initialize your DoubleBarrelServer. Once it
-is initialized, run wrapperTest.py. The wrapper test will loop 100 times,
-sending requests to the server instance and then getting back the results. It
-will print the results each time and then when it is finished it will tell you
-how long it took to do the 100 queries.
+The second test is of 100 multiple queries. A multiple query is connecting
+to the database and then running 100 queries before disconnecting.
 
-Next, it will loop another 100 times, but this time will fetch the data from
-Shotgun without the aid of the DoubleBarrelServer. It will use the regular 
-Shotgun API instead (still creating a DoubleBarrel instance without providing
-a host and port is the same as a regular Shotgun object).
+The first chunk below is showing data for 100 individual queries using
+DoubleBarrel. The second chunk is showing data for 100 individual queries
+using Shotgun's API. The third chunk is showing data for 100 multiple
+queries using DoubleBarrel. The forth chunk is showing data for 100 
+multiple queries using Shotgun's API.
+
+
+    Speed test - Class: DoubleBarrel Function: individualQuery Units: Seconds
+        Total time: 11.2291147709
+        Mean time: 0.112291147709
+        Median time: 0.0993931293488
+        Mode time(s): ['0.1']
+        Fastest time: 0.0913400650024
+        Slowest time: 0.203774213791
+        Time hits: [('0.1', '83 hits'), ('0.2', '17 hits')]
+    
+    Speed test - Class: Shotgun Function: individualQuery Units: Seconds
+        Total time: 44.5533914566
+        Mean time: 0.445533914566
+        Median time: 0.432259082794
+        Mode time(s): ['0.4']
+        Fastest time: 0.411613941193
+        Slowest time: 0.54580283165
+        Time hits: [('0.4', '75 hits'), ('0.5', '25 hits')]
+    
+    
+    Speed test - Class: DoubleBarrel Function: multipleQueries Units: Seconds
+        Total time: 11.3314521313
+        Mean time: 0.113314521313
+        Median time: 11.3314521313
+        Mode time(s): ['11.3']
+        Fastest time: 11.3314521313
+        Slowest time: 11.3314521313
+        Time hits: [('11.3', '1 hits')]
+    
+    Speed test - Class: Shotgun Function: multipleQueries Units: Seconds
+        Total time: 11.4555420876
+        Mean time: 0.114555420876
+        Median time: 11.4555420876
+        Mode time(s): ['11.5']
+        Fastest time: 11.4555420876
+        Slowest time: 11.4555420876
+        Time hits: [('11.5', '1 hits')]
+        
+As you can see, DoubleBarrel provides a significant speed enhancement
+when making individual database queries and is about equal when making
+multiple queries.
+
+
+# -------------------------------------------------------------
+Why
+# -------------------------------------------------------------
+The regular Shotgun API can be slow when initializing a Shotgun object. It
+can add anywhere from .5 to 5 seconds onto the startup time. This is just
+because it needs to go communicate down to wherever the server is being
+hosted and go through some certification. Once connected, however,
+talking to the database can be quite fast. This can cause an annoyance
+for tools that simply need to connect to grab one piece of data and then
+disconnect. Think along the lines of setting a shot's frame range upon
+opening a Maya file or Nuke script.
+
+
+# -------------------------------------------------------------
+Usage
+# -------------------------------------------------------------
+Add the folder doubleBarrel/doubleBarrel to your Python's site-packages,
+then import the DoubleBarrelServer object and DoubleBarrel object as
+follows:
+
+    from doubleBarrel import DoubleBarrel, DoubleBarrelServer
+
+DoubleBarrel can be used the same as the regular Shotgun API. In this
+version of the plugin, no host and port need to be provided as they are
+dynamically generated based on your local machine and the API key
+you provide to connect to Shotgun.
+
+DoubleBarrel objects will still work without a DoubleBarrelServer running,
+but you will not get the speed enhancements you see above. To see the
+speed improvements, you must first start a DoubleBarrelServer. You start
+a DoubleBarrelServer by creating an instance (the same as you would create
+a Shotgun or DoubleBarrel instance) and then call it's .run() method.
+
+You can provide host and port keyword arguments when creating an 
+instance of either the DoubleBarrel or DoubleBarrelServer objects, if you
+would like to override the machine and port that is being dynamically
+generated.
+
+In addition to being created the same as a regular Shotgun API object, you
+can also define a .sg file containing your login credentials and provide it as
+the main argument instead. See tests/serverTest.py, tests/wrapperTest.py
+and tests/myShotgunScript.sg for details.
+
+For a quick example of the wrapper, please go to the tests folder included,
+include your Shotgun details in the myShotgunScript.sg file and then
+run the serverTest.py file. Leaving serverTest.py running, then run
+wrapperTest.py. You will see serverTest.py being polled and your test
+results will be displayed in wrapperTest.py. 
+
+
+# -------------------------------------------------------------
+History
+# -------------------------------------------------------------
+v2.0 - August 18th
+    - Added automatic host and port generation feature.
+    - Partially completed GUI for a manager/monitor. Figured this would be
+    a good addition since this is a daemon tool. The GUI is almost completed,
+    but I have been hard pressed to find time to do so. Didn't want an
+    incomplete GUi to prevent me from releasing a new version.
+    - Added new feature to create a DoubleBarrel instance using a .sg file
+    rather than having to pass the arguments directly.
+    
+v1.0 - May 28th
+    - Released the initial version on GitHub.
+
+    
+# -------------------------------------------------------------
+Future
+# -------------------------------------------------------------
+- There are plans to add a GUI to make this work better running on local
+workstations. The server script needs to be left running continuously, and
+this makes things a bit sloppy when the server script is running locally.
+There must always be a shell running. The plan is to have this run as a GUI
+that is then dockable to the system tray and continue to run in the
+background. The GUI will also allow the user to add sg files to be run when
+the script is started, starting however many servers there are in the file.
+- When providing a Shotgun script to the manager (what the GUI would
+be controlling) with the name "DoubleBarrel" it would query Shotgun for
+all of the scripts available and just start servers for all of them.
+

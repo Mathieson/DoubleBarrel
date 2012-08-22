@@ -3,7 +3,6 @@ Created on Mar 15, 2012
 
 @author: mat.facer
 '''
-
 import os
 import sys
 import socket
@@ -39,7 +38,6 @@ def appKeyToPort(appKey):
     '''
     Translates the application key to a port number.
     '''
-
     minPort = 10000
     maxPort = 65535
 
@@ -59,7 +57,6 @@ def createUsingShotgunAuthFile(func):
     instead of the usual args and kwargs. It will get the args and kwargs from
     this file and then call the function.
     '''
-
     def wrapper(self, *args, **kwargs):
 
         # If the first argument is not a file, just return the normal function.
@@ -69,26 +66,30 @@ def createUsingShotgunAuthFile(func):
         # Store the first arg as our Shotgun file.
         shotgunFile = args[0]
 
-        # Try popping off the keyToUse kwarg. If there are multiple auth keys in the file, this will specify which to use.
+        # Try popping off the keyToUse kwarg. If there are multiple auth keys
+        # in the file, this will specify which to use.
         keyToUse = None
-        if kwargs.has_key('keyToUse'):
+        if 'keyToUse' in kwargs:
             keyToUse = kwargs.pop('keyToUse')
 
         # Get the auth data from the Shotgun file.
-        from monitor.config import ServerConfig  # Import here because importing at the top of the file would create an infinite import loop.
+        # Import here because importing at the top of the file would create
+        # an infinite import loop.
+        from monitor.config import ServerConfig
         serverConfig = ServerConfig(shotgunFile)
         authKey = serverConfig.authKey(keyToUse)
 
-        # Override any settings from the file with what the user has provided in kwargs.
+        # Override any settings from the file with what the user has provided
+        # in kwargs.
         authKey.update(kwargs)
 
-        # Pop the server's URL, script name, and script key from the authKey. These need to be passed as args rather than kwargs.
+        # Pop the server's URL, script name, and script key from the authKey.
+        # These need to be passed as args rather than kwargs.
         serverUrl = authKey.pop(AUTH_SERVER)
         scriptName = authKey.pop(AUTH_SCRIPT)
         scriptKey = authKey.pop(AUTH_KEY)
 
         return func(self, serverUrl, scriptName, scriptKey, **authKey)
-
     return wrapper
 
 
@@ -97,16 +98,17 @@ def createUsingShotgunAuthFile(func):
 # -----------------------------------------------------------------------------
 def getLogMessage(header, sock, **kwargs):
     '''
-    This will be our main function for generating a log message. Requires a message
-    header, a socket, and any additional log messages as keyword arguments.
+    This will be our main function for generating a log message. Requires a
+    message header, a socket, and any additional log messages as keyword
+    arguments.
     '''
-
     if type(sock) == socket.socket:
         host, port = sock.getpeername()
     elif type(sock) == tuple:
         host, port = sock
     else:
-        raise ValueError("sock must be a socket or tuple with host and port information")
+        msg = "sock must be a socket or tuple with host and port information"
+        raise ValueError(msg)
 
     host = socket.gethostbyname_ex(host)[0]
 
@@ -126,7 +128,6 @@ def _createDir(path):
     '''
     This creates the directories for where our logs will exist.
     '''
-
     # If the current directory already exists, our work is done.
     if os.path.exists(path):
         return path
@@ -145,7 +146,6 @@ def _configureRootLogger():
     This sets up the configuration for our root logger. It should log to the
     screen any messages at INFO level, and then any errors to a log file.
     '''
-
     # Get the logger object to work with.
     logger = logging.getLogger('')
     logger.setLevel(logging.NOTSET)
@@ -171,12 +171,11 @@ def _configureRootLogger():
 
 def _configureServerLogger():
     '''
-    This sets up the configuration for our server logger. It should log all INFO
-    level messages to the screen and also to a log file. The log file is named
-    the same as the __main__ module. This will allow us to have multiple servers
-    running at the same time, providing a log for each.
+    This sets up the configuration for our server logger. It should log all
+    INFO level messages to the screen and also to a log file. The log file is
+    named the same as the __main__ module. This will allow us to have
+    multiple servers running at the same time, providing a log for each.
     '''
-
     # Configure our server logger.
     logger = logging.getLogger('server')
     logger.setLevel(logging.INFO)

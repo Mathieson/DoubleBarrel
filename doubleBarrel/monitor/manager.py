@@ -3,7 +3,6 @@ Created on 2012-06-17
 
 @author: Mat
 '''
-
 import config
 from doubleBarrel.server import DoubleBarrelServer
 
@@ -28,7 +27,6 @@ class ServerManager(object):
         passed. The server will also be started. The server is run in a different
         thread so that we can have multiple servers running at the same time.
         '''
-
         #TODO: Add some checks here before creating duplicate servers. If we create a server that has the same port already in use, it will just result in a crash.
         # Check to make sure that an instance of the server doesn't already exist.
             # If it does already exist, just return None.
@@ -47,7 +45,6 @@ class ServerManager(object):
         Provided a filepath to a Shotgun authentication file, this will create
         a ServerConfig object and the pass it off to the addServer function.
         '''
-
         serverConfig = config.ServerConfig(filepath)
         if not skipAppend:
             self._config.addServerConfig(serverConfig)
@@ -62,7 +59,6 @@ class ServerManager(object):
         This will remove the server config from the monitor's config and also
         stop any servers that are currently running using its credentials.
         '''
-
         self.stopServer(server)
 
         # Remove the server from the manager.
@@ -78,7 +74,6 @@ class ServerManager(object):
         Stops the provided server from running. The object will still exist, but will no longer be
         processing any incoming requests.
         '''
-
         server.stop()
 
     def startServer(self, server):
@@ -87,7 +82,6 @@ class ServerManager(object):
         stopped. This is a special case since you cannot usually start up a thread again after it
         has already been run once.
         '''
-
         sg = server.shotgunObject()
         base_url = sg.base_url
         script_name = sg.config.script_name
@@ -102,6 +96,5 @@ class ServerManager(object):
         '''
         Just stops the provided server and starts it again immediately after.
         '''
-
         self.stopServer(server)
         self.startServer(server)

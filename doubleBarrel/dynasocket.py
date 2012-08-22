@@ -3,7 +3,6 @@ Created on 2012-04-07
 
 @author: Mat
 '''
-
 import common
 import ast
 import logging
@@ -20,7 +19,6 @@ def send(sock, message):
     '''
     Sends the message's length, then sends the message.
     '''
-
     try:
         # Get the message's length.
         msgLen = len(message)
@@ -42,7 +40,6 @@ def recv(sock):
     '''
     Receives the message length first, then receives the actual message.
     '''
-
     # Receive the message.
     msg = sock.recv(common.BUFFER_SIZE)
     # If it is not a message length, return the message.

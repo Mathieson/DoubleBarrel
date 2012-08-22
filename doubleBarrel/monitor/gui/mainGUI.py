@@ -3,7 +3,6 @@ Created on 2012-06-15
 
 @author: Mat
 '''
-
 import sys
 import os
 import io
@@ -18,7 +17,6 @@ class PyQtLogHandler(logging.Handler):
     '''
     A custom logging handler object that will write our log to a provided QTextBrowser widget.
     '''
-
     def __init__(self, destWidget):
         logging.Handler.__init__(self)
         self._destWidget = destWidget
@@ -55,7 +53,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Does any remaining setup that cannot be done from within the designer.
         '''
-
         # Group the actions for changing the split orientation.
         self.orientSplitActionGroup = QtGui.QActionGroup(self.menuManage)
         self.horizontalSplitAction.setActionGroup(self.orientSplitActionGroup)
@@ -82,7 +79,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Sets up the signal/slot connections for the GUI.
         '''
-
         # Manage the log display changing from toggling the checkbox.
         self.showLogCheck.toggled.connect(self._setLogVis)
 
@@ -116,7 +112,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Set the default state of the GUI.
         '''
-
         # Ensure the log is displayed properly.
         self.showLogCheck.toggled.emit(self.showLogCheck.checkState())
 
@@ -131,14 +126,12 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Sets the orientation of the log splitter.
         '''
-
         self.logSplitter.setOrientation(orientation)
 
     def _setLogChecks(self):
         '''
         Sets the state of the checkbox based on whether the log is showing.
         '''
-
         logState = self.isLogShowing()
 
         self.showLogCheck.blockSignals(True)
@@ -159,7 +152,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Sets the visibility of the log display area.
         '''
-
         self.logSplitter.setSizes([1, state])
         self._setLogChecks()
 
@@ -167,14 +159,12 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Returns whether the log is showing.
         '''
-
         return self.logSplitter.sizes()[-1]
 
     def selectedServers(self):
         '''
         Returns the currently selected servers in the tree.
         '''
-
         selectedItems = self.serverTree.selectedItems()
         selectedServers = []
         for item in selectedItems:
@@ -188,7 +178,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Adds a URL group to the tree view that the servers can then be added to.
         '''
-
         urlGroup = QtGui.QTreeWidgetItem(self.serverTree, [url])
         serverIcon = QtGui.QIcon(os.path.abspath(r'icons\server.png'))
         urlGroup.setIcon(0, serverIcon)
@@ -201,7 +190,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         Adds a server to the tree view. This is separated from the addServerBtnPressed function because it needs to get
         called when the GUI is first initialized.
         '''
-
         sgObj = server.shotgunObject()
 
         # Get the serverUrl's tree item and add the server under the URL group.
@@ -249,7 +237,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Creates an object for displaying the log for the provided server.
         '''
-
         # Create the widget, add it to the storage dictionary, and hide it by default.
         logDisplayWidget = QtGui.QTextBrowser(self.logDock)
         self._serverLogWidgets[server] = logDisplayWidget
@@ -265,7 +252,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Triggered when one of the remove server buttons is pressed.
         '''
-
         selectedItems = self.serverTree.selectedItems()
         for serverItem in selectedItems:
             # Pop the server from the storage dict. This will also remove it.
@@ -284,7 +270,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         items. If they do not, they will be removed from the GUI and the
         internal storage dictionary.
         '''
-
         # Create a copy of the urlGroups dict so we can change the items during iteration.
         for url, urlGroup in self._urlGroups.copy().iteritems():
             # If there are no longer any children.
@@ -299,7 +284,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Updates the status column for each server object.
         '''
-
         for serverItem, server in self._servers.iteritems():
             # If the server is running, check whether there are any errors.
             if server.isRunning():
@@ -319,7 +303,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Starts the currently selected server(s).
         '''
-
         for server in self.selectedServers():
             self._manager.startServer(server)
         self.updateServerStatuses()
@@ -328,7 +311,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Stops the currently selected server(s).
         '''
-
         for server in self.selectedServers():
             self._manager.stopServer(server)
         self.updateServerStatuses()
@@ -337,7 +319,6 @@ class MainGUI(QtGui.QMainWindow, mainUI.Ui_mainUi):
         '''
         Restarts the currently selected server(s).
         '''
-
         for server in self.selectedServers():
             self._manager.restartServer(server)
         self.updateServerStatuses()
